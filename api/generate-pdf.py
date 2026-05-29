@@ -127,7 +127,7 @@ def build_resume_pdf(data):
     if r.get("summary"):
         section("SUMMARY")
         story.append(Paragraph(r["summary"], S["summary"]))
-        story.append(Spacer(1, ssp))
+        story.append(Spacer(1, ssp * 0.4))
 
     # ── Education ─────────────────────────────────────────────────────────────
     edu = r.get("eduEntries", [])
@@ -146,7 +146,7 @@ def build_resume_pdf(data):
                 items.append(Paragraph(f"• {e['note']}", S["bullet"]))
             story.append(KeepTogether(items))
             story.append(Spacer(1, esp))
-        story.append(Spacer(1, ssp))
+        story.append(Spacer(1, ssp * 0.4))
 
     # ── Experience ────────────────────────────────────────────────────────────
     exp = r.get("expEntries", [])
@@ -177,13 +177,13 @@ def build_resume_pdf(data):
                 items.append(Paragraph(f"• {b}", S["bullet"]))
             story.append(KeepTogether(items))
             story.append(Spacer(1, esp))
-        story.append(Spacer(1, ssp))
+        story.append(Spacer(1, ssp * 0.4))
 
     # ── Skills ────────────────────────────────────────────────────────────────
     if r.get("skills"):
         section("SKILLS")
         story.append(Paragraph(r["skills"], S["skills"]))
-        story.append(Spacer(1, ssp))
+        story.append(Spacer(1, ssp * 0.4))
 
     # ── Certifications ────────────────────────────────────────────────────────
     if r.get("certs"):
