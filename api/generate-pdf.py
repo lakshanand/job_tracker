@@ -15,7 +15,7 @@ from http.server import BaseHTTPRequestHandler
 
 # ── ReportLab imports ─────────────────────────────────────────────────────────
 from reportlab.lib.pagesizes import A4, LETTER
-from reportlab.lib.units import mm, pt
+from reportlab.lib.units import mm
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 from reportlab.lib import colors
@@ -67,7 +67,7 @@ def build_resume_pdf(data):
 
     margin   = margin_mm * mm
     vmargin  = vmargin_mm * mm
-    leading  = fontsize * lineheight * pt
+    leading  = fontsize * lineheight
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -251,7 +251,7 @@ def build_coverletter_pdf(data):
 
     margin  = margin_mm * mm
     vmargin = vmargin_mm * mm
-    leading = fs * lh * pt
+    leading = fs * lh
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
