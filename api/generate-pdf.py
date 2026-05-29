@@ -15,7 +15,8 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
 from reportlab.lib import colors
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer,
-    HRFlowable, KeepTogether, Table, TableStyle
+    HRFlowable, KeepTogether, Table, TableStyle,
+    ListFlowable, ListItem
 )
 
 
@@ -76,7 +77,7 @@ def build_resume_pdf(data):
                        alignment=TA_RIGHT),
         "italic":  sty("italic",  fontName="Helvetica-Oblique",
                        textColor=colors.Color(0.2,0.2,0.2)),
-        "bullet":  sty("bullet",  leftIndent=8, firstLineIndent=-8, spaceAfter=1),
+        "bullet":  sty("bullet", spaceAfter=1),
         "skills":  sty("skills",  spaceAfter=2),
     }
 
@@ -143,7 +144,12 @@ def build_resume_pdf(data):
             if e.get("degree"):
                 items.append(Paragraph(f'<i>{e["degree"]}</i>', S["italic"]))
             if e.get("note"):
-                items.append(Paragraph(f"• {e['note']}", S["bullet"]))
+                items.append(ListFlowable([
+                    ListItem(Paragraph(e["note"], S["bullet"]),
+                        bulletColor=seccol, value="bullet",
+                        leftIndent=16, bulletIndent=4, spaceAfter=0)],
+                    bulletType="bullet", start="•",
+                    leftIndent=0, spaceAfter=0, spaceBefore=0))
             story.append(KeepTogether(items))
             story.append(Spacer(1, esp))
         story.append(Spacer(1, ssp * 0.4))
@@ -173,8 +179,15 @@ def build_resume_pdf(data):
 
             items = []
             items.append(entry_row(left, dateloc))
-            for b in bullets:
-                items.append(Paragraph(f"• {b}", S["bullet"]))
+            if bullets:
+                bullet_items = [ListItem(Paragraph(b, S["bullet"]),
+                    bulletColor=seccol, value="bullet",
+                    leftIndent=16, bulletIndent=4,
+                    spaceAfter=1) for b in bullets]
+                items.append(ListFlowable(bullet_items,
+                    bulletType="bullet", start="•",
+                    leftIndent=0, bulletIndent=0,
+                    spaceAfter=0, spaceBefore=0))
             story.append(KeepTogether(items))
             story.append(Spacer(1, esp))
         story.append(Spacer(1, ssp * 0.4))
@@ -190,8 +203,13 @@ def build_resume_pdf(data):
         section("CERTIFICATIONS")
         lines = [l.strip().lstrip("•-").strip()
                 for l in r["certs"].split("\n") if l.strip()]
-        for line in lines:
-            story.append(Paragraph(f"• {line}", S["bullet"]))
+        cert_items = [ListItem(Paragraph(line, S["bullet"]),
+            bulletColor=seccol, value="bullet",
+            leftIndent=16, bulletIndent=4,
+            spaceAfter=1) for line in lines]
+        story.append(ListFlowable(cert_items,
+            bulletType="bullet", start="•",
+            leftIndent=0, spaceAfter=0, spaceBefore=0))
 
     doc.build(story)
     buf.seek(0)
