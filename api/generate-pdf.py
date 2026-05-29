@@ -103,8 +103,8 @@ def build_resume_pdf(data):
 
     def section(title):
         story.append(Paragraph(title, S["secttitle"]))
-        story.append(HRFlowable(width="100%", thickness=0.5,
-                                color=ltgrey, spaceAfter=4))
+        story.append(HRFlowable(width="100%", thickness=1.0,
+                                color=seccol, spaceAfter=4))
 
     def entry_row(left, right):
         """Two-column row: company/school left, dates right — on same line."""
