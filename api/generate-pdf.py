@@ -110,13 +110,16 @@ def build_resume_pdf(data):
         """Two-column row: company/school left, dates right — on same line."""
         t = Table([[Paragraph(left, S["company"]),
                     Paragraph(right, S["dates"])]],
-                  colWidths=[pw*0.65, pw*0.35])
+                  colWidths=[pw*0.68, pw*0.32],
+                  hAlign='LEFT')
         t.setStyle(TableStyle([
-            ("VALIGN",      (0,0), (-1,-1), "TOP"),
+            ("VALIGN",       (0,0), (-1,-1), "TOP"),
             ("LEFTPADDING",  (0,0), (-1,-1), 0),
             ("RIGHTPADDING", (0,0), (-1,-1), 0),
             ("TOPPADDING",   (0,0), (-1,-1), 0),
-            ("BOTTOMPADDING",(0,0), (-1,-1), 2),
+            ("BOTTOMPADDING",(0,0), (-1,-1), 1),
+            ("LEFTPADDING",  (1,0), (1,0),   0),
+            ("RIGHTPADDING", (1,0), (1,0),   0),
         ]))
         return t
 
