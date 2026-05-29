@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Resume Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style id="shared-styles">
+/* ── FlowCV-style customize ── */
+
+
+
+
+
+
+
+
+
+
+.slider-row input[type=range]{flex:1}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</style>
+<style>
+.editor-layout{display:flex;gap:0;flex:1;overflow:hidden;height:calc(100vh - 52px)}
+.editor-left{width:400px;flex-shrink:0;overflow-y:auto;padding:20px;background:#fafafa;border-right:1px solid var(--border)}
+.editor-left::-webkit-scrollbar{width:4px}
+.editor-left::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.editor-right{flex:1;overflow-y:auto}
+.personal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.avatar{width:48px;height:48px;border-radius:50%;background:#f0f0f0;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.name-display{font-size:15px;font-weight:700;color:var(--ink)}
+#personal-fields{display:none;flex-direction:column;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+#personal-fields.open{display:flex}
+.contact-row{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink2)}
+.contact-row svg{width:12px;height:12px;color:var(--ink3);flex-shrink:0}
+/* Customize panel */
+.customize-panel{padding:20px;overflow-y:auto;background:#fafafa;height:calc(100vh - 52px)}
+.customize-panel::-webkit-scrollbar{width:4px}
+.customize-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ── Smart print: only show the paper ── */
+@media print {
+  body * { visibility: hidden !important; }
+  .paper, .paper *, .cl-paper, .cl-paper * { visibility: visible !important; }
+  .paper, .cl-paper {
+    position: fixed !important;
+    left: 0 !important; top: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    margin: 0 !important; padding: 0 !important;
+  }
+  .sidebar, .topnav, .editor-left, .customize-panel { display: none !important; }
+}
+</style>
+</head>
+<body>
+<script src="shared.js"></script>
+<script>document.getElementById("shared-styles").textContent=SHARED_CSS; document.write(renderSidebar("resume"));</script>
+
+<div class="main">
+  <div class="topnav">
+    <button class="topnav-tab active" id="tab-content" onclick="switchTab('content')">📄 Content</button>
+    <button class="topnav-tab" id="tab-customize" onclick="switchTab('customize')">⚙️ Customize</button>
+    <div class="topnav-right">
+      <button class="btn" onclick="exportData()">💾 Save</button>
+      <button class="btn btn-accent" onclick="downloadPDF()" id="download-btn">⬇ Download PDF</button>
+    </div>
+  </div>
+
+  <!-- ── CONTENT TAB ── -->
+  <div id="content-view" class="editor-layout">
+    <!-- Left: Editor -->
+    <div class="editor-left">
+      <!-- Personal card -->
+      <div class="personal-card">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="avatar">👤</div>
+          <div style="flex:1"><div class="name-display" id="disp-name">Your Name</div></div>
+          <button class="icon-btn" onclick="togglePersonal()" title="Edit">✏️</button>
+        </div>
+        <div id="disp-contacts" style="margin-top:8px;display:flex;flex-direction:column;gap:3px"></div>
+        <div id="personal-fields">
+          <div class="field-row">
+            <div class="field"><label>First Name</label><input id="p-fname" oninput="onPersonalChange()" placeholder="Laksh"/></div>
+            <div class="field"><label>Last Name</label><input id="p-lname" oninput="onPersonalChange()" placeholder="Anand"/></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Email</label><input id="p-email" oninput="onPersonalChange()" placeholder="you@email.com"/></div>
+            <div class="field"><label>Phone</label><input id="p-phone" oninput="onPersonalChange()" placeholder="+1 555 000"/></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Location</label><input id="p-location" oninput="onPersonalChange()" placeholder="Hamilton, ON"/></div>
+            <div class="field"><label>LinkedIn</label><input id="p-linkedin" oninput="onPersonalChange()" placeholder="in/your-name"/></div>
+          </div>
+          <div class="field"><label>Website</label><input id="p-website" oninput="onPersonalChange()" placeholder="yoursite.com"/></div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="section-block open" id="blk-summary">
+        <div class="section-head" onclick="toggleBlock('blk-summary')"><div class="section-icon">📋</div><h3>Summary</h3><span class="chevron">▼</span></div>
+        <div class="section-body"><textarea class="simple-textarea" id="s-summary" rows="4" oninput="renderResume()" placeholder="Analytical engineering professional…"></textarea></div>
+      </div>
+
+      <!-- Experience -->
+      <div class="section-block open" id="blk-exp">
+        <div class="section-head" onclick="toggleBlock('blk-exp')"><div class="section-icon">💼</div><h3>Experience</h3><span class="chevron">▼</span></div>
+        <div class="section-body" id="exp-list"><button class="add-entry-btn" onclick="addEntry('exp')">+ Add Entry</button></div>
+      </div>
+
+      <!-- Education -->
+      <div class="section-block open" id="blk-edu">
+        <div class="section-head" onclick="toggleBlock('blk-edu')"><div class="section-icon">🎓</div><h3>Education</h3><span class="chevron">▼</span></div>
+        <div class="section-body" id="edu-list"><button class="add-entry-btn" onclick="addEntry('edu')">+ Add Entry</button></div>
+      </div>
+
+      <!-- Skills -->
+      <div class="section-block open" id="blk-skills">
+        <div class="section-head" onclick="toggleBlock('blk-skills')"><div class="section-icon">🛠️</div><h3>Skills</h3><span class="chevron">▼</span></div>
+        <div class="section-body"><textarea class="simple-textarea" id="s-skills" rows="3" oninput="saveAndRender()" placeholder="Python, AutoCAD, Project Management…"></textarea></div>
+      </div>
+
+      <!-- Certifications -->
+      <div class="section-block" id="blk-certs">
+        <div class="section-head" onclick="toggleBlock('blk-certs')"><div class="section-icon">🏆</div><h3>Certifications</h3><span class="chevron">▼</span></div>
+        <div class="section-body">
+          <p class="hint">One per line</p>
+          <textarea class="simple-textarea" id="s-certs" rows="3" oninput="saveAndRender()" placeholder="PMP Certification (2023)&#10;AWS Solutions Architect (2022)"></textarea>
+        </div>
+      </div>
+
+      <!-- AI Tailor -->
+      <div class="ai-panel" style="margin-top:4px">
+        <div class="ai-panel-title">✨ AI Tailor — Experience Bullets</div>
+        <p class="hint">Select a saved job or paste a description. Only bullet points are rewritten.</p>
+        <select id="ai-job-select" onchange="onJobSelect()" style="border:1px solid #f0c0dd;border-radius:6px;padding:7px 9px;font:400 12px Inter,sans-serif;color:var(--ink);background:#fff;width:100%">
+          <option value="">— Pick a saved job —</option>
+        </select>
+        <textarea id="ai-jobdesc" placeholder="…or paste a job description here" style="min-height:70px"></textarea>
+        <button class="btn btn-accent" style="width:100%;justify-content:center" onclick="tailorResume()">✨ Tailor experience bullets</button>
+        <div class="ai-status" id="ai-status"></div>
+      </div>
+    </div>
+
+    <!-- Right: Preview -->
+    <div class="editor-right">
+      <div class="paper-wrap">
+        <div class="paper" id="resume-paper">
+          <div class="rv" id="rv-content"><div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0">Fill in your details →</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CUSTOMIZE TAB ── -->
+  <div id="customize-view" style="display:none;flex:1;overflow:hidden;height:calc(100vh - 52px)">
+    <!-- Left panel: same structure as cover letter customize -->
+    <div class="customize-panel">
+
+      <!-- BASICS: Templates + Language -->
+      <div class="section-block open" id="blk-rv-basics">
+        <div class="section-head" onclick="toggleBlock('blk-rv-basics')"><div class="section-icon">🎨</div><h3>Templates</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:12px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+            <div class="template-thumb active" id="tmpl-classic" onclick="applyTemplate('classic')">
+              <div style="background:#fff;border:2px solid var(--accent);border-radius:4px;padding:5px;aspect-ratio:1/1.414">
+                <div style="height:4px;background:#111;border-radius:1px;margin-bottom:2px"></div>
+                <div style="height:1.5px;background:#ddd;margin-bottom:2px"></div>
+                <div style="height:1.5px;background:#eee;margin-bottom:1px"></div>
+                <div style="height:1.5px;background:#eee"></div>
+              </div>
+              <span>Classic</span>
+            </div>
+            <div class="template-thumb" id="tmpl-modern" onclick="applyTemplate('modern')">
+              <div style="background:#fff;border:2px solid var(--border);border-radius:4px;padding:5px;aspect-ratio:1/1.414">
+                <div style="height:4px;background:#2563eb;border-radius:1px;margin-bottom:2px"></div>
+                <div style="height:1.5px;background:#ddd;margin-bottom:2px"></div>
+                <div style="height:1.5px;background:#eee;margin-bottom:1px"></div>
+                <div style="height:1.5px;background:#eee"></div>
+              </div>
+              <span>Modern</span>
+            </div>
+            <div class="template-thumb" id="tmpl-minimal" onclick="applyTemplate('minimal')">
+              <div style="background:#fff;border:2px solid var(--border);border-radius:4px;padding:5px;aspect-ratio:1/1.414">
+                <div style="height:3px;background:#555;border-radius:1px;margin-bottom:4px"></div>
+                <div style="height:1px;background:#ddd;margin-bottom:3px"></div>
+                <div style="height:1.5px;background:#eee;margin-bottom:1px"></div>
+                <div style="height:1.5px;background:#eee"></div>
+              </div>
+              <span>Minimal</span>
+            </div>
+            <div class="template-thumb" id="tmpl-elegant" onclick="applyTemplate('elegant')">
+              <div style="background:#1a1a2e;border:2px solid var(--border);border-radius:4px;padding:5px;aspect-ratio:1/1.414">
+                <div style="height:4px;background:#e91e8c;border-radius:1px;margin-bottom:2px"></div>
+                <div style="height:1.5px;background:#555;margin-bottom:2px"></div>
+                <div style="height:1.5px;background:#444;margin-bottom:1px"></div>
+                <div style="height:1.5px;background:#444"></div>
+              </div>
+              <span>Elegant</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LANGUAGE & PAGE FORMAT -->
+      <div class="section-block open" id="blk-rv-lang">
+        <div class="section-head" onclick="toggleBlock('blk-rv-lang')"><div class="section-icon">🌐</div><h3>Language & Page Format</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <div class="field"><label>Language</label>
+              <select id="c-language" onchange="applyCustomize()">
+                <option value="en-US">English (US)</option>
+                <option value="en-GB">English (UK)</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+              </select>
+            </div>
+            <div class="field"><label>Date Format</label>
+              <select id="c-dateformat" onchange="applyCustomize()">
+                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+              </select>
+            </div>
+            <div class="field"><label>Page Format</label>
+              <select id="c-pageformat" onchange="setPageFormat(this.value)">
+                <option value="A4">A4</option>
+                <option value="Letter">US Letter</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYOUT & SPACING -->
+      <div class="section-block open" id="blk-rv-layout">
+        <div class="section-head" onclick="toggleBlock('blk-rv-layout')"><div class="section-icon">📐</div><h3>Layout & Spacing</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:14px">
+          <div class="field"><label>Font Size — <span id="c-fontsize-val">10</span>pt</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="c-fontsize" min="8" max="14" step="0.5" value="10" style="flex:1" oninput="el('c-fontsize-val').textContent=this.value;applyCustomize()"/>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-sm" onclick="adjustSlider('c-fontsize',-0.5,'c-fontsize-val')">−</button>
+                <button class="btn btn-sm" onclick="adjustSlider('c-fontsize',0.5,'c-fontsize-val')">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="field"><label>Line Height — <span id="c-lineheight-val">1.70</span></label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="c-lineheight" min="1.1" max="2.0" step="0.1" value="1.7" style="flex:1" oninput="el('c-lineheight-val').textContent=parseFloat(this.value).toFixed(2);applyCustomize()"/>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-sm" onclick="adjustSliderF('c-lineheight',-0.1,'c-lineheight-val',2)">−</button>
+                <button class="btn btn-sm" onclick="adjustSliderF('c-lineheight',0.1,'c-lineheight-val',2)">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="field"><label>Left & Right Margin — <span id="c-margin-val">12</span>mm</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="c-margin" min="6" max="26" step="2" value="12" style="flex:1" oninput="el('c-margin-val').textContent=this.value;applyCustomize()"/>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-sm" onclick="adjustSlider('c-margin',-2,'c-margin-val')">−</button>
+                <button class="btn btn-sm" onclick="adjustSlider('c-margin',2,'c-margin-val')">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="field"><label>Top & Bottom Margin — <span id="c-vmargin-val">10</span>mm</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="c-vmargin" min="5" max="26" step="2" value="10" style="flex:1" oninput="el('c-vmargin-val').textContent=this.value;applyCustomize()"/>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-sm" onclick="adjustSlider('c-vmargin',-2,'c-vmargin-val')">−</button>
+                <button class="btn btn-sm" onclick="adjustSlider('c-vmargin',2,'c-vmargin-val')">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="field"><label>Space Between Entries — <span id="c-entryspace-val">7</span>px</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="c-entryspace" min="2" max="20" step="1" value="7" style="flex:1" oninput="el('c-entryspace-val').textContent=this.value;applyCustomize()"/>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-sm" onclick="adjustSlider('c-entryspace',-1,'c-entryspace-val')">−</button>
+                <button class="btn btn-sm" onclick="adjustSlider('c-entryspace',1,'c-entryspace-val')">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESIGN: Colors + Font -->
+      <div class="section-block open" id="blk-rv-design">
+        <div class="section-head" onclick="toggleBlock('blk-rv-design')"><div class="section-icon">🎨</div><h3>Design</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:12px">
+
+          <p class="hint" style="font-size:12px;color:var(--ink3)">Quick color presets</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <div onclick="setAccentColor('#111111')" style="width:32px;height:32px;border-radius:50%;background:#111111;cursor:pointer;border:2px solid var(--accent)" title="Black"></div>
+            <div onclick="setAccentColor('#495963')" style="width:32px;height:32px;border-radius:50%;background:#495963;cursor:pointer;border:2px solid transparent" title="Slate"></div>
+            <div onclick="setAccentColor('#547980')" style="width:32px;height:32px;border-radius:50%;background:#547980;cursor:pointer;border:2px solid transparent" title="Teal"></div>
+            <div onclick="setAccentColor('#348AA7')" style="width:32px;height:32px;border-radius:50%;background:#348AA7;cursor:pointer;border:2px solid transparent" title="Cyan"></div>
+            <div onclick="setAccentColor('#355C7D')" style="width:32px;height:32px;border-radius:50%;background:#355C7D;cursor:pointer;border:2px solid transparent" title="Navy"></div>
+            <div onclick="setAccentColor('#386FA4')" style="width:32px;height:32px;border-radius:50%;background:#386FA4;cursor:pointer;border:2px solid transparent" title="Blue"></div>
+            <div onclick="setAccentColor('#432371')" style="width:32px;height:32px;border-radius:50%;background:#432371;cursor:pointer;border:2px solid transparent" title="Purple"></div>
+            <div onclick="setAccentColor('#C7417B')" style="width:32px;height:32px;border-radius:50%;background:#C7417B;cursor:pointer;border:2px solid transparent" title="Pink"></div>
+            <div onclick="setAccentColor('#F45B69')" style="width:32px;height:32px;border-radius:50%;background:#F45B69;cursor:pointer;border:2px solid transparent" title="Red"></div>
+            <div onclick="setAccentColor('#E91E8C')" style="width:32px;height:32px;border-radius:50%;background:#E91E8C;cursor:pointer;border:2px solid transparent" title="Magenta"></div>
+          </div>
+
+          <div class="field-row">
+            <div class="field"><label>Accent / Divider</label><input type="color" id="c-accent" value="#111111" oninput="setAccentColorDirect(this.value)"/></div>
+            <div class="field"><label>Name Color</label><input type="color" id="c-namecolor" value="#111111" oninput="applyCustomize()"/></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Body Text</label><input type="color" id="c-bodycolor" value="#222222" oninput="applyCustomize()"/></div>
+            <div class="field"><label>Section Titles</label><input type="color" id="c-sectioncolor" value="#111111" oninput="applyCustomize()"/></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FONT -->
+      <div class="section-block open" id="blk-rv-font">
+        <div class="section-head" onclick="toggleBlock('blk-rv-font')"><div class="section-icon">🔤</div><h3>Font</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:12px">
+          <div style="display:flex;gap:8px;margin-bottom:4px">
+            <button id="font-style-sans"  class="btn btn-accent btn-sm" style="flex:1;justify-content:center" onclick="setFontStyle('sans')"><span style="font-family:Inter;font-weight:700">Aa</span> Sans</button>
+            <button id="font-style-serif" class="btn btn-sm"            style="flex:1;justify-content:center" onclick="setFontStyle('serif')"><span style="font-family:Georgia;font-weight:700">Aa</span> Serif</button>
+            <button id="font-style-mono"  class="btn btn-sm"            style="flex:1;justify-content:center" onclick="setFontStyle('mono')"><span style="font-family:monospace;font-weight:700">Aa</span> Mono</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px" id="font-grid">
+            <button class="btn btn-accent btn-sm" id="font-Inter"     onclick="setFont('Inter')"     style="font-family:Inter;justify-content:center">Inter</button>
+            <button class="btn btn-sm"            id="font-Roboto"    onclick="setFont('Roboto')"    style="font-family:Roboto;justify-content:center">Roboto</button>
+            <button class="btn btn-sm"            id="font-Lato"      onclick="setFont('Lato')"      style="font-family:Lato;justify-content:center">Lato</button>
+            <button class="btn btn-sm"            id="font-Mulish"    onclick="setFont('Mulish')"    style="font-family:Mulish;justify-content:center">Mulish</button>
+            <button class="btn btn-sm"            id="font-Open Sans" onclick="setFont('Open Sans')" style="font-family:'Open Sans';justify-content:center">Open Sans</button>
+            <button class="btn btn-sm"            id="font-Barlow"    onclick="setFont('Barlow')"    style="font-family:Barlow;justify-content:center">Barlow</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- NAME SIZE -->
+      <div class="section-block open" id="blk-rv-name">
+        <div class="section-head" onclick="toggleBlock('blk-rv-name')"><div class="section-icon">Aa</div><h3>Name Size</h3><span class="chevron">▼</span></div>
+        <div class="section-body">
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" id="ns-xs" style="flex:1;justify-content:center" onclick="setNameSize(16)">XS</button>
+            <button class="btn btn-sm" id="ns-s"  style="flex:1;justify-content:center" onclick="setNameSize(18)">S</button>
+            <button class="btn btn-sm" id="ns-m"  style="flex:1;justify-content:center" onclick="setNameSize(22)">M</button>
+            <button class="btn btn-accent btn-sm" id="ns-l"  style="flex:1;justify-content:center" onclick="setNameSize(26)">L</button>
+            <button class="btn btn-sm" id="ns-xl" style="flex:1;justify-content:center" onclick="setNameSize(30)">XL</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn" style="width:100%;justify-content:center;margin-top:4px" onclick="applyTemplate('classic')">↺ Reset to Classic</button>
+
+    </div>
+
+    <!-- Right: live preview -->
+    <div style="flex:1;overflow-y:auto">
+      <div class="paper-wrap" style="min-height:100%">
+        <div class="paper" id="resume-paper-c">
+          <div class="rv" id="rv-content-c"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var expEntries=[], eduEntries=[];
+var currentFont = "Inter";
+var currentNameSize = 26;
+var expIdCounter=0, eduIdCounter=0;
+
+// ── Load saved data ────────────────────────────────────────────────────────────
+function loadSaved() {
+  var r = Store.get("jt_resume") || {};
+  var setv = function(id,val){ var e=el(id); if(e&&val!=null) e.value=val; };
+  setv("p-fname",r.fname); setv("p-lname",r.lname); setv("p-email",r.email);
+  setv("p-phone",r.phone); setv("p-location",r.location); setv("p-linkedin",r.linkedin);
+  setv("p-website",r.website); setv("s-summary",r.summary);
+  setv("s-skills",r.skills); setv("s-certs",r.certs);
+  if(r.expIdCounter) expIdCounter=r.expIdCounter;
+  if(r.eduIdCounter) eduIdCounter=r.eduIdCounter;
+  if(r.expEntries&&r.expEntries.length){ expEntries=r.expEntries; renderEntryList("exp"); }
+  if(r.eduEntries&&r.eduEntries.length){ eduEntries=r.eduEntries; renderEntryList("edu"); }
+  // Load style
+  var s = Store.get("jt_resumeStyle") || {};
+  var setSlider = function(id,val,lblId,dec){ var inp=el(id),lbl=el(lblId); if(inp&&val!=null){ inp.value=val; if(lbl) lbl.textContent=dec?parseFloat(val).toFixed(dec):val; } };
+  if(s.font){ currentFont=s.font; }
+  setSlider("c-fontsize",s.fontSize,"c-fontsize-val",0);
+  setSlider("c-lineheight",s.lineHeight,"c-lineheight-val",2);
+  if(s.nameSize){ currentNameSize=s.nameSize; setNameSize(s.nameSize); }
+  setSlider("c-margin",s.margin,"c-margin-val",0);
+  setSlider("c-vmargin",s.vmargin,"c-vmargin-val",0);
+  setSlider("c-entryspace",s.entrySpace,"c-entryspace-val",0);
+  setSlider("c-sectionspace",s.sectionSpace,"c-sectionspace-val",0);
+  if(s.accent&&el("c-accent")) el("c-accent").value=s.accent;
+  if(s.nameColor&&el("c-namecolor")) el("c-namecolor").value=s.nameColor;
+  if(s.bodyColor&&el("c-bodycolor")) el("c-bodycolor").value=s.bodyColor;
+  if(s.sectionColor&&el("c-sectioncolor")) el("c-sectioncolor").value=s.sectionColor;
+  onPersonalChange();
+  populateJobSelect();
+}
+
+function saveResume() {
+  var data = {
+    fname:v("p-fname"),lname:v("p-lname"),email:v("p-email"),phone:v("p-phone"),
+    location:v("p-location"),linkedin:v("p-linkedin"),website:v("p-website"),
+    summary:v("s-summary"),skills:v("s-skills"),certs:v("s-certs"),
+    expEntries:expEntries,eduEntries:eduEntries,expIdCounter:expIdCounter,eduIdCounter:eduIdCounter
+  };
+  Store.set("jt_resume", data);
+}
+
+function saveAndRender() { saveResume(); renderResume(); }
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  el("tab-content").className  = "topnav-tab"+(tab==="content"?" active":"");
+  el("tab-customize").className= "topnav-tab"+(tab==="customize"?" active":"");
+  el("content-view").style.display   = tab==="content"?"flex":"none";
+  el("customize-view").style.display = tab==="customize"?"flex":"none";
+  if(tab==="customize") { renderResume(); applyCustomize(); syncPreviewC(); }
+}
+
+// ── Personal ──────────────────────────────────────────────────────────────────
+function togglePersonal(){ el("personal-fields").classList.toggle("open"); }
+
+function onPersonalChange() {
+  var name = [v("p-fname"),v("p-lname")].filter(Boolean).join(" ");
+  el("disp-name").textContent = name||"Your Name";
+  var contacts=[], iconEmail='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>';
+  var iconPhone='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.28 2 2 0 0 1 3.58 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  var iconLoc='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var iconLI='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>';
+  if(v("p-email"))    contacts.push('<div class="contact-row">'+iconEmail+esc(v("p-email"))+'</div>');
+  if(v("p-phone"))    contacts.push('<div class="contact-row">'+iconPhone+esc(v("p-phone"))+'</div>');
+  if(v("p-location")) contacts.push('<div class="contact-row">'+iconLoc+esc(v("p-location"))+'</div>');
+  if(v("p-linkedin")) contacts.push('<div class="contact-row">'+iconLI+esc(v("p-linkedin"))+'</div>');
+  el("disp-contacts").innerHTML = contacts.join("");
+  saveAndRender();
+}
+
+// ── Section blocks ────────────────────────────────────────────────────────────
+function toggleBlock(id){ el(id)&&el(id).classList.toggle("open"); }
+
+// ── Entry management ──────────────────────────────────────────────────────────
+function addEntry(type, data) {
+  data = data||{};
+  if(type==="exp") expIdCounter++; else eduIdCounter++;
+  var id=(type==="exp"?"exp-":"edu-")+(type==="exp"?expIdCounter:eduIdCounter);
+  if(type==="exp") expEntries.push({id:id,...data}); else eduEntries.push({id:id,...data});
+  renderEntryList(type); saveResume(); renderResume();
+}
+
+function removeEntry(type,id) {
+  if(type==="exp") expEntries=expEntries.filter(function(e){return e.id!==id;});
+  else             eduEntries=eduEntries.filter(function(e){return e.id!==id;});
+  renderEntryList(type); saveResume(); renderResume();
+}
+
+function getEntryData(type,id) {
+  var pfx=type==="exp"?"e-"+id:"d-"+id;
+  if(type==="exp") return {id:id,company:v(pfx+"-company"),title:v(pfx+"-title"),startdate:v(pfx+"-start"),enddate:v(pfx+"-end"),location:v(pfx+"-loc"),bullets:v(pfx+"-bullets")};
+  return {id:id,school:v(pfx+"-school"),degree:v(pfx+"-degree"),startdate:v(pfx+"-start"),enddate:v(pfx+"-end"),location:v(pfx+"-loc"),note:v(pfx+"-note")};
+}
+
+function syncAndRender(type) {
+  var list=type==="exp"?expEntries:eduEntries;
+  list.forEach(function(e){ Object.assign(e,getEntryData(type,e.id)); });
+  list.forEach(function(e) {
+    var card=el("card-"+e.id); if(!card) return;
+    var t=card.querySelector(".entry-title"),s=card.querySelector(".entry-sub");
+    if(type==="exp"){ if(t)t.textContent=e.company||"New Experience"; if(s)s.textContent=e.title||""; }
+    else { if(t)t.textContent=e.school||"New Education"; if(s)s.textContent=e.degree||""; }
+  });
+  saveResume(); renderResume();
+}
+
+function renderEntryList(type) {
+  var listId=type==="exp"?"exp-list":"edu-list";
+  var list=type==="exp"?expEntries:eduEntries;
+  var container=el(listId);
+  container.querySelectorAll(".entry-card").forEach(function(n){n.remove();});
+  container.querySelector(".add-entry-btn")&&container.querySelector(".add-entry-btn").remove();
+  list.forEach(function(entry) {
+    var card=document.createElement("div");
+    card.className="entry-card"; card.id="card-"+entry.id;
+    var pfx=type==="exp"?"e-"+entry.id:"d-"+entry.id;
+    var ht=type==="exp"?(entry.company||"New Experience"):(entry.school||"New Education");
+    var hs=type==="exp"?(entry.title||""):(entry.degree||"");
+    if(type==="exp") {
+      card.innerHTML='<div class="entry-card-head"><div><div class="entry-title">'+esc(ht)+'</div><div class="entry-sub">'+esc(hs)+'</div></div><button class="icon-btn del" onclick="removeEntry(\'exp\',\''+entry.id+'\')" title="Delete">🗑</button></div>'+
+        '<div class="entry-fields">'+
+        '<div class="field-row"><div class="field"><label>Company</label><input id="'+pfx+'-company" value="'+esc(entry.company||'')+'" oninput="syncAndRender(\'exp\')" placeholder="Aspire Consulting"/></div>'+
+        '<div class="field"><label>Job Title</label><input id="'+pfx+'-title" value="'+esc(entry.title||'')+'" oninput="syncAndRender(\'exp\')" placeholder="Junior Consultant"/></div></div>'+
+        '<div class="field-row"><div class="field"><label>Start</label><input id="'+pfx+'-start" value="'+esc(entry.startdate||'')+'" oninput="syncAndRender(\'exp\')" placeholder="09/2025"/></div>'+
+        '<div class="field"><label>End</label><input id="'+pfx+'-end" value="'+esc(entry.enddate||'')+'" oninput="syncAndRender(\'exp\')" placeholder="Present"/></div></div>'+
+        '<div class="field"><label>Location</label><input id="'+pfx+'-loc" value="'+esc(entry.location||'')+'" oninput="syncAndRender(\'exp\')" placeholder="Hamilton, ON"/></div>'+
+        '<div class="field"><label>Bullet Points (one per line)</label><textarea id="'+pfx+'-bullets" rows="5" oninput="syncAndRender(\'exp\')" placeholder="• Led project delivery…">'+esc(entry.bullets||'')+'</textarea></div>'+
+        '</div>';
+    } else {
+      card.innerHTML='<div class="entry-card-head"><div><div class="entry-title">'+esc(ht)+'</div><div class="entry-sub">'+esc(hs)+'</div></div><button class="icon-btn del" onclick="removeEntry(\'edu\',\''+entry.id+'\')" title="Delete">🗑</button></div>'+
+        '<div class="entry-fields">'+
+        '<div class="field"><label>School</label><input id="'+pfx+'-school" value="'+esc(entry.school||'')+'" oninput="syncAndRender(\'edu\')" placeholder="McMaster University"/></div>'+
+        '<div class="field"><label>Degree</label><input id="'+pfx+'-degree" value="'+esc(entry.degree||'')+'" oninput="syncAndRender(\'edu\')" placeholder="B.Sc. Mechanical Engineering"/></div>'+
+        '<div class="field-row"><div class="field"><label>Start</label><input id="'+pfx+'-start" value="'+esc(entry.startdate||'')+'" oninput="syncAndRender(\'edu\')" placeholder="09/2021"/></div>'+
+        '<div class="field"><label>End</label><input id="'+pfx+'-end" value="'+esc(entry.enddate||'')+'" oninput="syncAndRender(\'edu\')" placeholder="06/2025"/></div></div>'+
+        '<div class="field-row"><div class="field"><label>Location</label><input id="'+pfx+'-loc" value="'+esc(entry.location||'')+'" oninput="syncAndRender(\'edu\')" placeholder="Hamilton, ON"/></div>'+
+        '<div class="field"><label>Note (GPA etc.)</label><input id="'+pfx+'-note" value="'+esc(entry.note||'')+'" oninput="syncAndRender(\'edu\')" placeholder="GPA: 3.3/4"/></div></div>'+
+        '</div>';
+    }
+    container.appendChild(card);
+  });
+  var btn=document.createElement("button");
+  btn.className="add-entry-btn"; btn.onclick=function(){addEntry(type);}; btn.textContent="+ Add Entry";
+  container.appendChild(btn);
+}
+
+// ── Render resume preview ─────────────────────────────────────────────────────
+function renderResume() {
+  var html = buildResumeHTML();
+  var c1=el("rv-content"); if(c1) c1.innerHTML=html;
+  syncPreviewC();
+}
+
+function syncPreviewC() {
+  var c2=el("rv-content-c"); if(c2) c2.innerHTML=buildResumeHTML();
+}
+
+function buildResumeHTML() {
+  var name=[v("p-fname"),v("p-lname")].filter(Boolean).join(" ");
+  var email=v("p-email"),phone=v("p-phone"),location=v("p-location"),linkedin=v("p-linkedin"),website=v("p-website");
+  var summary=v("s-summary"),skills=v("s-skills"),certs=v("s-certs");
+  if(!name&&!summary&&!expEntries.length&&!eduEntries.length) return '<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0">Fill in your details →</div>';
+  var html="";
+  if(name) html+='<div class="rv-name">'+esc(name)+'</div>';
+  var iE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>';
+  var iP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.28 2 2 0 0 1 3.58 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  var iL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var iLI='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>';
+  var ci=[];
+  if(email) ci.push('<span class="rv-contact-item">'+iE+esc(email)+'</span>');
+  if(phone) ci.push('<span class="rv-contact-item">'+iP+esc(phone)+'</span>');
+  if(location) ci.push('<span class="rv-contact-item">'+iL+esc(location)+'</span>');
+  if(linkedin) ci.push('<span class="rv-contact-item">'+iLI+esc(linkedin)+'</span>');
+  if(website) ci.push('<span class="rv-contact-item">🌐 '+esc(website)+'</span>');
+  if(ci.length) html+='<div class="rv-contacts">'+ci.join("")+'</div>';
+  html+='<hr class="rv-divider"/>';
+  if(summary) html+='<div class="rv-section"><div class="rv-section-title">Summary</div><div class="rv-summary">'+esc(summary)+'</div></div>';
+  if(eduEntries.length) {
+    html+='<div class="rv-section"><div class="rv-section-title">Education</div>';
+    eduEntries.forEach(function(e) {
+      var dates=[e.startdate,e.enddate].filter(Boolean).join(" – ");
+      html+='<div class="rv-entry"><div class="rv-edu-head"><span class="rv-edu-school">'+esc(e.school||"")+'</span><span class="rv-edu-dates">'+esc(dates)+(e.location?" | "+esc(e.location):"")+'</span></div>'+(e.degree?'<div class="rv-edu-degree">'+esc(e.degree)+'</div>':"")+(e.note?'<div class="rv-edu-note">• '+esc(e.note)+'</div>':"")+'</div>';
+    });
+    html+='</div>';
+  }
+  if(expEntries.length) {
+    html+='<div class="rv-section"><div class="rv-section-title">Experience</div>';
+    expEntries.forEach(function(e) {
+      var dates=[e.startdate,e.enddate].filter(Boolean).join(" – ");
+      var bullets=(e.bullets||"").split("\n").map(function(b){return b.trim();}).filter(function(b){return b&&b!=="•";});
+      html+='<div class="rv-entry"><div class="rv-entry-head"><span class="rv-entry-company">'+esc(e.company||"")+',</span><span class="rv-entry-title" style="flex:1;margin-left:4px">'+esc(e.title||"")+'</span><span class="rv-entry-dates">'+esc(dates)+(e.location?" | "+esc(e.location):"")+'</span></div>'+(bullets.length?'<ul class="rv-bullets">'+bullets.map(function(b){return '<li>'+esc(b.replace(/^•\s*/,""))+'</li>';}).join("")+'</ul>':"")+'</div>';
+    });
+    html+='</div>';
+  }
+  if(skills) html+='<div class="rv-section"><div class="rv-section-title">Skills</div><div class="rv-skills">'+esc(skills)+'</div></div>';
+  if(certs) {
+    var certLines=certs.split("\n").map(function(l){return l.trim();}).filter(Boolean);
+    html+='<div class="rv-section"><div class="rv-section-title">Certifications</div>';
+    html+=certLines.length>1?'<ul class="rv-bullets">'+certLines.map(function(l){return '<li>'+esc(l.replace(/^[•\-]\s*/,""))+'</li>';}).join("")+'</ul>':'<div class="rv-certs">'+esc(certs)+'</div>';
+    html+='</div>';
+  }
+  return html;
+}
+
+// ── Customize ─────────────────────────────────────────────────────────────────
+var TEMPLATES={
+  classic:{font:"Inter",fontSize:10,lineHeight:1.7,nameSize:22,margin:12,vmargin:10,entrySpace:7,sectionSpace:8,accent:"#111111",nameColor:"#111111",bodyColor:"#222222",sectionColor:"#111111"},
+  modern: {font:"Inter",fontSize:10,lineHeight:1.7,nameSize:22,margin:12,vmargin:10,entrySpace:7,sectionSpace:8,accent:"#2563eb",nameColor:"#2563eb",bodyColor:"#222222",sectionColor:"#2563eb"},
+  minimal:{font:"Georgia",fontSize:10,lineHeight:1.8,nameSize:20,margin:16,vmargin:12,entrySpace:6,sectionSpace:10,accent:"#555555",nameColor:"#111111",bodyColor:"#333333",sectionColor:"#555555"},
+};
+
+var TEMPLATES_EXTRA = {elegant:{font:"Georgia",fontSize:10,lineHeight:1.7,nameSize:22,margin:14,vmargin:12,entrySpace:6,sectionSpace:10,accent:"#e91e8c",nameColor:"#e91e8c",bodyColor:"#222222",sectionColor:"#e91e8c"}};
+function applyTemplate(name) {
+  var t=TEMPLATES[name]||TEMPLATES_EXTRA[name]; if(!t) return;
+  document.querySelectorAll(".template-thumb").forEach(function(e){e.classList.remove("active");});
+  el("tmpl-"+name)&&el("tmpl-"+name).classList.add("active");
+  var ss=function(id,val,lbl,dec){ var inp=el(id),lb=el(lbl); if(inp)inp.value=val; if(lb)lb.textContent=dec?parseFloat(val).toFixed(dec):val; };
+  currentNameSize = t.nameSize || 26;
+  currentFont = t.font || "Inter";
+  ss("c-fontsize",t.fontSize,"c-fontsize-val",0);
+  ss("c-lineheight",t.lineHeight,"c-lineheight-val",2);
+  ss("c-margin",t.margin,"c-margin-val",0);
+  ss("c-vmargin",t.vmargin,"c-vmargin-val",0);
+  ss("c-entryspace",t.entrySpace,"c-entryspace-val",0);
+  if(el("c-accent"))el("c-accent").value=t.accent;
+  if(el("c-namecolor"))el("c-namecolor").value=t.nameColor;
+  if(el("c-bodycolor"))el("c-bodycolor").value=t.bodyColor;
+  if(el("c-sectioncolor"))el("c-sectioncolor").value=t.sectionColor;
+  applyCustomize();
+}
+
+function applyCustomize() {
+  var g=function(id){return el(id)?el(id).value:"";};
+  var font=currentFont||"Inter",fontSize=g("c-fontsize")||10,lineHeight=g("c-lineheight")||1.7;
+  var nameSize=currentNameSize||26,margin=g("c-margin")||12,vmargin=g("c-vmargin")||10;
+  var entrySpace=g("c-entryspace")||7,sectionSpace=g("c-sectionspace")||8;
+  var accent=g("c-accent")||"#111",nameColor=g("c-namecolor")||"#111";
+  var bodyColor=g("c-bodycolor")||"#222",sectionColor=g("c-sectioncolor")||"#111";
+  var s=document.getElementById("customize-styles-rv");
+  if(!s){s=document.createElement("style");s.id="customize-styles-rv";document.head.appendChild(s);}
+  s.textContent=".rv{font-family:"+font+",sans-serif!important;padding:"+vmargin+"mm "+margin+"mm!important}"+
+    ".rv,.rv-summary,.rv-skills,.rv-certs{font-size:"+fontSize+"px!important;line-height:"+lineHeight+"!important;color:"+bodyColor+"!important}"+
+    ".rv-name{font-size:"+nameSize+"px!important;color:"+nameColor+"!important}"+
+    ".rv-section-title{color:"+sectionColor+"!important}"+
+    ".rv-divider{border-top-color:"+accent+"!important}"+
+    ".rv-entry{margin-bottom:"+entrySpace+"px!important}"+
+    ".rv-section{margin-bottom:"+sectionSpace+"px!important}"+
+    ".rv-entry-company{color:"+sectionColor+"!important}"+
+    ".rv-bullets li{font-size:"+fontSize+"px!important;line-height:"+lineHeight+"!important;color:"+bodyColor+"!important}";
+  // Save style
+  Store.set("jt_resumeStyle",{font:font,fontSize:fontSize,lineHeight:lineHeight,nameSize:nameSize,margin:margin,vmargin:vmargin,entrySpace:entrySpace,sectionSpace:sectionSpace,accent:accent,nameColor:nameColor,bodyColor:bodyColor,sectionColor:sectionColor});
+  syncPreviewC();
+}
+
+// ── AI Tailor ─────────────────────────────────────────────────────────────────
+function populateJobSelect() {
+  var jobs = Store.get("jt_jobs")||[];
+  var sel = el("ai-job-select"); if(!sel) return;
+  sel.innerHTML='<option value="">— Pick a saved job —</option>';
+  jobs.filter(function(j){return j.description;}).forEach(function(j) {
+    var opt=document.createElement("option"); opt.value=j.id; opt.textContent=j.title+" — "+(j.company||"");
+    sel.appendChild(opt);
+  });
+}
+
+function onJobSelect() {
+  var jobs=Store.get("jt_jobs")||[];
+  var sel=el("ai-job-select"); if(!sel||!sel.value) return;
+  var job=jobs.find(function(j){return j.id===sel.value;});
+  if(job&&job.description){ var t=el("ai-jobdesc"); if(t) t.value=job.description; }
+}
+
+async function tailorResume() {
+  var jobDesc=v("ai-jobdesc");
+  if(!jobDesc){setAIStatus("Select a job or paste a description.",true);return;}
+  if(!expEntries.length){setAIStatus("Add experience entries first.",true);return;}
+  setAIStatus('<span class="spinner"></span> Rewriting bullets…');
+  try {
+    var entriesText=expEntries.map(function(e,i){return "Entry "+(i+1)+": "+e.title+" at "+e.company+"\nCurrent bullets:\n"+(e.bullets||"");}).join("\n\n");
+    var prompt='Rewrite ONLY the bullet points for each experience entry to match the job. Keep all facts true. Return ONLY valid JSON: {"entries":["bullets for entry 1","bullets for entry 2",...]} Each value is bullet text with one bullet per line starting with •. No markdown.\n\nJOB:\n'+jobDesc+'\n\nENTRIES:\n'+entriesText;
+    var raw=await callGemini(prompt,false);
+    var data=parseJSON(raw);
+    if(data.entries&&Array.isArray(data.entries)) {
+      data.entries.forEach(function(bullets,i) {
+        if(expEntries[i]) {
+          var bulletsEl=el("e-"+expEntries[i].id+"-bullets");
+          if(bulletsEl) bulletsEl.value=bullets;
+          expEntries[i].bullets=bullets;
+        }
+      });
+    }
+    saveResume(); renderResume();
+    setAIStatus("✓ Experience bullets updated!");
+  } catch(e){setAIStatus("Error: "+e.message,true);}
+}
+
+function setAIStatus(msg,err){var s=el("ai-status");if(!s)return;s.innerHTML=msg;s.className="ai-status"+(err?" err":"");}
+
+// Expose
+
+// ── FlowCV Customize helpers ─────────────────────────────────────────────────
+
+
+function setPageFormat(fmt){
+  var papers=document.querySelectorAll(".paper,.rv");
+  papers.forEach(function(p){
+    if(p.classList.contains("paper")) p.style.width=fmt==="A4"?"210mm":"215.9mm";
+  });
+  applyCustomize();
+}
+
+function adjustSlider(id,delta,valId){
+  var inp=el(id); if(!inp) return;
+  var newVal=Math.round((parseFloat(inp.value)+delta)*10)/10;
+  newVal=Math.max(parseFloat(inp.min),Math.min(parseFloat(inp.max),newVal));
+  inp.value=newVal;
+  var lbl=el(valId); if(lbl) lbl.textContent=newVal;
+  applyCustomize();
+}
+
+function adjustSliderF(id,delta,valId,dec){
+  var inp=el(id); if(!inp) return;
+  var newVal=Math.round((parseFloat(inp.value)+delta)*100)/100;
+  newVal=Math.max(parseFloat(inp.min),Math.min(parseFloat(inp.max),newVal));
+  inp.value=newVal;
+  var lbl=el(valId); if(lbl) lbl.textContent=newVal.toFixed(dec);
+  applyCustomize();
+}
+
+function setAccentColor(color){
+  var inp=el("c-accent"); if(inp) inp.value=color;
+  var sc=el("c-sectioncolor"); if(sc) sc.value=color;
+  var nc=el("c-namecolor"); if(nc) nc.value=color;
+  document.querySelectorAll(".color-swatch").forEach(function(s){ s.classList.remove("active"); });
+  // find matching swatch
+  document.querySelectorAll(".color-swatch[onclick]").forEach(function(s){
+    if(s.getAttribute("onclick").includes(color.replace("#","#"))) s.classList.add("active");
+  });
+  applyCustomize();
+}
+
+function setAccentColorDirect(color){
+  var sc=el("c-sectioncolor"); if(sc) sc.value=color;
+  var nc=el("c-namecolor"); if(nc) nc.value=color;
+  applyCustomize();
+}
+
+function pickCustomColor(){ el("c-accent")&&el("c-accent").click(); }
+
+var FONT_GROUPS = {
+  sans:  ["Inter","Roboto","Lato","Mulish","Open Sans","Barlow","Jost","Fira Sans"],
+  serif: ["Georgia","Times New Roman","Garamond"],
+  mono:  ["Courier New","IBM Plex Mono"]
+};
+
+function setFontStyle(style){
+  document.querySelectorAll(".font-style-btn").forEach(function(b){ b.classList.remove("active"); });
+  el("font-style-"+style)&&el("font-style-"+style).classList.add("active");
+  var grid=el("font-grid"); if(!grid) return;
+  grid.innerHTML="";
+  (FONT_GROUPS[style]||FONT_GROUPS.sans).forEach(function(f){
+    var btn=document.createElement("button");
+    btn.className="font-btn";
+    btn.id="font-"+f;
+    btn.setAttribute("onclick","setFont('"+f+"')");
+    btn.style.fontFamily="'"+f+"'";
+    btn.textContent=f;
+    grid.appendChild(btn);
+  });
+  setFont(FONT_GROUPS[style][0]);
+}
+
+function setFont(font){
+  currentFont = font;
+  document.querySelectorAll(".font-btn").forEach(function(b){
+    b.classList.remove("active");
+    if(b.textContent.trim()===font) b.classList.add("active");
+  });
+  applyCustomize();
+}
+
+function setNameSize(size){
+  currentNameSize = size;
+  document.querySelectorAll("[id^='ns-']").forEach(function(b){ b.classList.remove("btn-accent"); b.classList.add("btn-sm"); if(!b.classList.contains("btn")) b.classList.add("btn"); });
+  var map={16:"xs",18:"s",22:"m",26:"l",30:"xl"};
+  var key=map[size];
+  if(key){ var btn=el("ns-"+key); if(btn){ btn.classList.add("btn-accent"); } }
+  applyCustomize();
+}
+
+
+// ── PDF Download ──────────────────────────────────────────────────────────────
+async function downloadPDF() {
+  var btn = el("download-btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating…';
+
+  // First check if PDF server is running
+  try {
+    var health = await fetch(getPDFServerURL().includes("localhost") ? "http://localhost:5050/health" : "/api/generate-pdf", { signal: AbortSignal.timeout(2000) });
+    if (!health.ok) throw new Error("Server error");
+  } catch(e) {
+    // PDF server not running — fall back to browser print
+    showToast("Tip: Run pdf_server.py locally for ATS-readable PDFs. Using browser print now.", false);
+    btn.disabled = false;
+    btn.innerHTML = "⬇ Download PDF";
+    // Smart print — only show paper
+    document.body.classList.add("printing-resume");
+    window.print();
+    setTimeout(function(){ document.body.classList.remove("printing-resume"); }, 1000);
+    return;
+  }
+
+  try {
+    var resumeData = Store.get("jt_resume") || {};
+    var styleData  = Store.get("jt_resumeStyle") || {};
+
+    var res = await fetch(getPDFServerURL(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "resume", resume: resumeData, style: styleData })
+    });
+
+    if (!res.ok) {
+      var err = await res.json();
+      throw new Error(err.error || "PDF generation failed");
+    }
+
+    // Download the PDF
+    var blob = await res.blob();
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement("a");
+    a.href   = url;
+    a.download = (resumeData.fname||"resume") + "_resume.pdf";
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("PDF downloaded!");
+  } catch(e) {
+    showToast("Error: " + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = "⬇ Download PDF";
+  }
+}
+
+window.switchTab=switchTab; window.togglePersonal=togglePersonal; window.onPersonalChange=onPersonalChange;
+window.toggleBlock=toggleBlock; window.addEntry=addEntry; window.removeEntry=removeEntry;
+window.syncAndRender=syncAndRender; window.saveAndRender=saveAndRender;
+window.applyTemplate=applyTemplate; window.applyCustomize=applyCustomize;
+window.onJobSelect=onJobSelect; window.tailorResume=tailorResume;
+window.downloadPDF=downloadPDF;
+window.setPageFormat=setPageFormat;
+window.adjustSlider=adjustSlider; window.adjustSliderF=adjustSliderF;
+window.setAccentColor=setAccentColor; window.setAccentColorDirect=setAccentColorDirect;
+window.pickCustomColor=pickCustomColor; window.setFontStyle=setFontStyle;
+window.setFont=setFont; window.setNameSize=setNameSize;
+
+document.addEventListener("DOMContentLoaded",function(){ loadSaved(); renderResume(); });
+</script>
+</body>
+</html>

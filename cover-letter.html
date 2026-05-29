@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Cover Letter</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style id="shared-styles"></style>
+<style>
+.editor-layout{display:flex;gap:0;flex:1;overflow:hidden;height:calc(100vh - 52px)}
+.editor-left{width:400px;flex-shrink:0;overflow-y:auto;padding:20px;background:#fafafa;border-right:1px solid var(--border)}
+.editor-left::-webkit-scrollbar{width:4px}
+.editor-left::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.editor-right{flex:1;overflow-y:auto}
+.customize-panel{width:400px;flex-shrink:0;overflow-y:auto;padding:20px;background:#fafafa;border-right:1px solid var(--border)}
+.customize-panel::-webkit-scrollbar{width:4px}
+.customize-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ── Smart print: only show the paper ── */
+@media print {
+  body * { visibility: hidden !important; }
+  .paper, .paper *, .cl-paper, .cl-paper * { visibility: visible !important; }
+  .paper, .cl-paper {
+    position: fixed !important;
+    left: 0 !important; top: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    margin: 0 !important; padding: 0 !important;
+  }
+  .sidebar, .topnav, .editor-left, .customize-panel { display: none !important; }
+}
+</style>
+</head>
+<body>
+<script src="shared.js"></script>
+<script>document.getElementById("shared-styles").textContent=SHARED_CSS; document.write(renderSidebar("cover-letter"));</script>
+
+<div class="main">
+  <div class="topnav">
+    <button class="topnav-tab active" id="tab-content" onclick="switchTab('content')">💌 Content</button>
+    <button class="topnav-tab" id="tab-customize" onclick="switchTab('customize')">⚙️ Customize</button>
+    <div class="topnav-right">
+      <button class="btn" onclick="exportData()">💾 Save</button>
+      <button class="btn btn-accent" onclick="downloadCLPDF()" id="cl-download-btn">⬇ Download PDF</button>
+    </div>
+  </div>
+
+  <!-- ── CONTENT TAB ── -->
+  <div id="content-view" class="editor-layout">
+    <div class="editor-left">
+
+      <!-- Personal Details -->
+      <div class="section-block open" id="blk-personal">
+        <div class="section-head" onclick="toggleBlock('blk-personal')"><div class="section-icon">👤</div><h3>Personal Details</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:8px">
+          <p class="hint">Synced from your Resume page.</p>
+          <div class="field-row">
+            <div class="field"><label>Full Name</label><input id="cl-fullname" oninput="renderCL()" placeholder="Laksh Anand"/></div>
+            <div class="field"><label>Job Title / Role</label><input id="cl-jobtitle-personal" oninput="renderCL()" placeholder="Mechanical Engineer (EIT)"/></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Email</label><input id="cl-email" oninput="renderCL()" placeholder="you@email.com"/></div>
+            <div class="field"><label>Phone</label><input id="cl-phone" oninput="renderCL()" placeholder="+1 555 000"/></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Location</label><input id="cl-location" oninput="renderCL()" placeholder="Hamilton, ON"/></div>
+            <div class="field"><label>LinkedIn</label><input id="cl-linkedin" oninput="renderCL()" placeholder="in/your-name"/></div>
+          </div>
+          <button class="btn btn-sm" style="width:100%;justify-content:center" onclick="syncPersonal()">↙ Sync from Resume</button>
+        </div>
+      </div>
+
+      <!-- Date -->
+      <div class="section-block open" id="blk-date">
+        <div class="section-head" onclick="toggleBlock('blk-date')"><div class="section-icon">📅</div><h3>Date</h3><span class="chevron">▼</span></div>
+        <div class="section-body">
+          <div class="field"><label>Date</label><input id="cl-date" oninput="renderCL()" placeholder="May 20, 2026"/></div>
+        </div>
+      </div>
+
+      <!-- Recipient Details -->
+      <div class="section-block open" id="blk-recipient">
+        <div class="section-head" onclick="toggleBlock('blk-recipient')"><div class="section-icon">📬</div><h3>Recipient Details</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:8px">
+          <div class="field"><label>Recipient Name / Department</label><input id="cl-manager" oninput="renderCL()" placeholder="Sarah Johnson or Hiring Team"/></div>
+          <div class="field"><label>Company Name</label><input id="cl-company" oninput="renderCL()" placeholder="Acme Corp"/></div>
+          <div class="field"><label>Company Address</label><input id="cl-address" oninput="renderCL()" placeholder="Vancouver, BC"/></div>
+          <div class="field"><label>Job Title (for subject line)</label><input id="cl-title" oninput="renderCL()" placeholder="Contracts Technician"/></div>
+        </div>
+      </div>
+
+      <!-- Letter Body -->
+      <div class="section-block open" id="blk-body">
+        <div class="section-head" onclick="toggleBlock('blk-body')"><div class="section-icon">✍️</div><h3>Letter Body</h3><span class="chevron">▼</span></div>
+        <div class="section-body">
+          <textarea class="simple-textarea" id="cl-body" rows="10" oninput="saveCL();renderCL()" style="min-height:180px" placeholder="Write or generate your cover letter…"></textarea>
+        </div>
+      </div>
+
+      <!-- Signature -->
+      <div class="section-block open" id="blk-signature">
+        <div class="section-head" onclick="toggleBlock('blk-signature')"><div class="section-icon">✒️</div><h3>Signature</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:8px">
+          <div class="field"><label>Sign-off</label>
+            <select id="cl-signoff" onchange="renderCL()">
+              <option value="Sincerely">Sincerely,</option>
+              <option value="Best regards">Best regards,</option>
+              <option value="Kind regards">Kind regards,</option>
+              <option value="Respectfully">Respectfully,</option>
+              <option value="Thank you">Thank you,</option>
+            </select>
+          </div>
+          <div class="field"><label>Signature Name</label><input id="cl-signame" oninput="renderCL()" placeholder="Laksh Anand"/></div>
+        </div>
+      </div>
+
+      <!-- AI Generate -->
+      <div class="ai-panel" style="margin-top:4px">
+        <div class="ai-panel-title">✨ Generate with Gemini</div>
+        <p class="hint">Select a saved job or paste a description.</p>
+        <select id="ai-job-select" onchange="onJobSelect()" style="border:1px solid #f0c0dd;border-radius:6px;padding:7px 9px;font:400 12px Inter,sans-serif;color:var(--ink);background:#fff;width:100%">
+          <option value="">— Pick a saved job —</option>
+        </select>
+        <textarea id="ai-jobdesc" placeholder="…or paste a job description here" style="min-height:70px"></textarea>
+        <button class="btn btn-accent" style="width:100%;justify-content:center" onclick="generateCL()">✨ Generate cover letter</button>
+        <div class="ai-status" id="ai-status"></div>
+      </div>
+
+    </div>
+
+    <!-- Right: Preview -->
+    <div class="editor-right">
+      <div class="paper-wrap">
+        <div class="cl-paper" id="cl-paper-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CUSTOMIZE TAB ── -->
+  <div id="customize-view" style="display:none;flex:1;overflow:hidden;height:calc(100vh - 52px)">
+    <div class="customize-panel">
+
+      <div class="section-block open" id="blk-cl-lang">
+        <div class="section-head" onclick="toggleBlock('blk-cl-lang')"><div class="section-icon">🌐</div><h3>Page Format</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:10px">
+          <div class="field"><label>Page Size</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <button id="cl-fmt-a4" class="btn btn-sm" style="justify-content:center" onclick="setCLFormat('A4')">A4</button>
+              <button id="cl-fmt-letter" class="btn btn-accent btn-sm" style="justify-content:center" onclick="setCLFormat('Letter')">US Letter</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-block open" id="blk-cl-header">
+        <div class="section-head" onclick="toggleBlock('blk-cl-header')"><div class="section-icon">📐</div><h3>Header Layout</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:10px">
+          <div class="field"><label>Alignment</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <button id="cl-align-left" class="btn btn-sm" style="justify-content:center" onclick="setCLAlign('left')">Left</button>
+              <button id="cl-align-center" class="btn btn-accent btn-sm" style="justify-content:center" onclick="setCLAlign('center')">Center</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-block open" id="blk-cl-colors">
+        <div class="section-head" onclick="toggleBlock('blk-cl-colors')"><div class="section-icon">🎨</div><h3>Colors</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:10px">
+          <div class="field-row">
+            <div class="field"><label>Name Color</label><input type="color" id="cl-c-namecolor" value="#111111" oninput="applyCLCustomize()"/></div>
+            <div class="field"><label>Accent / Divider</label><input type="color" id="cl-c-accent" value="#111111" oninput="applyCLCustomize()"/></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Body Text</label><input type="color" id="cl-c-bodycolor" value="#222222" oninput="applyCLCustomize()"/></div>
+            <div class="field"><label>Recipient</label><input type="color" id="cl-c-recipientcolor" value="#111111" oninput="applyCLCustomize()"/></div>
+          </div>
+          <div class="field"><label>Quick Colors</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+              <div onclick="setCLAccent('#111111')" style="width:28px;height:28px;border-radius:50%;background:#111111;cursor:pointer;border:2px solid var(--accent)" title="Black"></div>
+              <div onclick="setCLAccent('#495963')" style="width:28px;height:28px;border-radius:50%;background:#495963;cursor:pointer;border:2px solid transparent" title="Slate"></div>
+              <div onclick="setCLAccent('#547980')" style="width:28px;height:28px;border-radius:50%;background:#547980;cursor:pointer;border:2px solid transparent" title="Teal"></div>
+              <div onclick="setCLAccent('#356CA5')" style="width:28px;height:28px;border-radius:50%;background:#356CA5;cursor:pointer;border:2px solid transparent" title="Blue"></div>
+              <div onclick="setCLAccent('#432371')" style="width:28px;height:28px;border-radius:50%;background:#432371;cursor:pointer;border:2px solid transparent" title="Purple"></div>
+              <div onclick="setCLAccent('#C74177')" style="width:28px;height:28px;border-radius:50%;background:#C74177;cursor:pointer;border:2px solid transparent" title="Pink"></div>
+              <div onclick="setCLAccent('#F45B69')" style="width:28px;height:28px;border-radius:50%;background:#F45B69;cursor:pointer;border:2px solid transparent" title="Red"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-block open" id="blk-cl-typo">
+        <div class="section-head" onclick="toggleBlock('blk-cl-typo')"><div class="section-icon">🔤</div><h3>Typography</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:12px">
+          <div class="field"><label>Font Family</label>
+            <select id="cl-c-font" onchange="applyCLCustomize()">
+              <option value="Inter">Inter</option>
+              <option value="Georgia">Georgia (Serif)</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Lato">Lato</option>
+              <option value="Mulish">Mulish</option>
+              <option value="Open Sans">Open Sans</option>
+            </select>
+          </div>
+          <div class="field"><label>Font Size — <span id="cl-c-fontsize-val">10.5</span>pt</label><input type="range" id="cl-c-fontsize" min="9" max="13" step="0.5" value="10.5" oninput="el('cl-c-fontsize-val').textContent=this.value;applyCLCustomize()"/></div>
+          <div class="field"><label>Line Height — <span id="cl-c-lineheight-val">1.85</span></label><input type="range" id="cl-c-lineheight" min="1.4" max="2.2" step="0.05" value="1.85" oninput="el('cl-c-lineheight-val').textContent=parseFloat(this.value).toFixed(2);applyCLCustomize()"/></div>
+          <div class="field"><label>Name Size — <span id="cl-c-namesize-val">20</span>pt</label><input type="range" id="cl-c-namesize" min="14" max="32" step="1" value="20" oninput="el('cl-c-namesize-val').textContent=this.value;applyCLCustomize()"/></div>
+        </div>
+      </div>
+
+      <div class="section-block open" id="blk-cl-spacing">
+        <div class="section-head" onclick="toggleBlock('blk-cl-spacing')"><div class="section-icon">📏</div><h3>Spacing</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:12px">
+          <div class="field"><label>L/R Margin — <span id="cl-c-margin-val">20</span>mm</label><input type="range" id="cl-c-margin" min="8" max="30" step="1" value="20" oninput="el('cl-c-margin-val').textContent=this.value;applyCLCustomize()"/></div>
+          <div class="field"><label>T/B Margin — <span id="cl-c-vmargin-val">18</span>mm</label><input type="range" id="cl-c-vmargin" min="8" max="30" step="1" value="18" oninput="el('cl-c-vmargin-val').textContent=this.value;applyCLCustomize()"/></div>
+          <div class="field"><label>Paragraph Spacing — <span id="cl-c-paraspacing-val">12</span>px</label><input type="range" id="cl-c-paraspacing" min="6" max="28" step="1" value="12" oninput="el('cl-c-paraspacing-val').textContent=this.value;applyCLCustomize()"/></div>
+        </div>
+      </div>
+
+      <div class="section-block open" id="blk-cl-declaration">
+        <div class="section-head" onclick="toggleBlock('blk-cl-declaration')"><div class="section-icon">✒️</div><h3>Declaration Style</h3><span class="chevron">▼</span></div>
+        <div class="section-body" style="gap:10px">
+          <div class="field"><label>Sign-off Position</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <button id="cl-decl-left" class="btn btn-accent btn-sm" style="justify-content:center" onclick="setDeclPos('left')">Left</button>
+              <button id="cl-decl-right" class="btn btn-sm" style="justify-content:center" onclick="setDeclPos('right')">Right</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn" style="width:100%;justify-content:center;margin-top:4px" onclick="resetCLStyle()">↺ Reset to Default</button>
+    </div>
+
+    <!-- Customize preview -->
+    <div style="flex:1;overflow-y:auto">
+      <div class="paper-wrap" style="min-height:100%">
+        <div class="cl-paper" id="cl-paper-customize"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var clSettings={headerAlign:"center",sigLine:true,declPosition:"left"};
+
+function switchTab(tab) {
+  el("tab-content").className  ="topnav-tab"+(tab==="content"?" active":"");
+  el("tab-customize").className="topnav-tab"+(tab==="customize"?" active":"");
+  el("content-view").style.display  =tab==="content"?"flex":"none";
+  el("customize-view").style.display=tab==="customize"?"flex":"none";
+  if(tab==="customize"){applyCLCustomize();renderCL();}
+}
+
+function toggleBlock(id){el(id)&&el(id).classList.toggle("open");}
+
+// ── Load / Save ───────────────────────────────────────────────────────────────
+function loadSaved(){
+  var d=Store.get("jt_cl")||{};
+  var setv=function(id,val){var e=el(id);if(e&&val!=null)e.value=val;};
+  setv("cl-fullname",d.fullname); setv("cl-jobtitle-personal",d.jobtitlePersonal);
+  setv("cl-email",d.email); setv("cl-phone",d.phone);
+  setv("cl-location",d.location); setv("cl-linkedin",d.linkedin);
+  setv("cl-date",d.date); setv("cl-manager",d.manager);
+  setv("cl-company",d.company); setv("cl-address",d.address);
+  setv("cl-title",d.title); setv("cl-body",d.body);
+  if(d.signoff&&el("cl-signoff"))el("cl-signoff").value=d.signoff;
+  setv("cl-signame",d.signame);
+  // Style
+  var s=Store.get("jt_clStyle")||{};
+  var setSlider=function(id,val,lbl,dec){var inp=el(id),lb=el(lbl);if(inp&&val!=null){inp.value=val;if(lb)lb.textContent=dec?parseFloat(val).toFixed(dec):val;}};
+  if(s.font&&el("cl-c-font"))el("cl-c-font").value=s.font;
+  setSlider("cl-c-fontsize",s.fontSize,"cl-c-fontsize-val",0);
+  setSlider("cl-c-lineheight",s.lineHeight,"cl-c-lineheight-val",2);
+  setSlider("cl-c-namesize",s.nameSize,"cl-c-namesize-val",0);
+  setSlider("cl-c-margin",s.margin,"cl-c-margin-val",0);
+  setSlider("cl-c-vmargin",s.vmargin,"cl-c-vmargin-val",0);
+  setSlider("cl-c-paraspacing",s.paraspacing,"cl-c-paraspacing-val",0);
+  if(s.accent&&el("cl-c-accent"))el("cl-c-accent").value=s.accent;
+  if(s.nameColor&&el("cl-c-namecolor"))el("cl-c-namecolor").value=s.nameColor;
+  if(s.bodyColor&&el("cl-c-bodycolor"))el("cl-c-bodycolor").value=s.bodyColor;
+  if(s.recipientColor&&el("cl-c-recipientcolor"))el("cl-c-recipientcolor").value=s.recipientColor;
+  if(s.headerAlign){clSettings.headerAlign=s.headerAlign;setCLAlign(s.headerAlign,true);}
+  if(s.sigLine!=null){clSettings.sigLine=s.sigLine;setSigLine(s.sigLine,true);}
+  if(s.declPosition){clSettings.declPosition=s.declPosition;setDeclPos(s.declPosition,true);}
+  // Auto-set today's date if empty
+  if(!d.date){var e=el("cl-date");if(e)e.value=new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});}
+  syncPersonal(true);
+  populateJobSelect();
+  renderCL();
+}
+
+function saveCL(){
+  Store.set("jt_cl",{fullname:v("cl-fullname"),jobtitlePersonal:v("cl-jobtitle-personal"),email:v("cl-email"),phone:v("cl-phone"),location:v("cl-location"),linkedin:v("cl-linkedin"),date:v("cl-date"),manager:v("cl-manager"),company:v("cl-company"),address:v("cl-address"),title:v("cl-title"),body:v("cl-body"),signoff:v("cl-signoff"),signame:v("cl-signame")});
+}
+
+function syncPersonal(silent){
+  var r=Store.get("jt_resume")||{};
+  var name=[r.fname,r.lname].filter(Boolean).join(" ");
+  var setIfEmpty=function(id,val){var e=el(id);if(e&&!e.value&&val)e.value=val;};
+  setIfEmpty("cl-fullname",name); setIfEmpty("cl-email",r.email);
+  setIfEmpty("cl-phone",r.phone); setIfEmpty("cl-location",r.location);
+  setIfEmpty("cl-linkedin",r.linkedin);
+  if(!silent) showToast("Personal details synced!");
+  renderCL();
+}
+
+// ── Render CL ─────────────────────────────────────────────────────────────────
+function renderCL(){
+  var html=buildCLHTML();
+  var c1=el("cl-paper-content"); if(c1) c1.innerHTML=html;
+  var c2=el("cl-paper-customize"); if(c2) c2.innerHTML=html;
+}
+
+function buildCLHTML(){
+  var name=v("cl-fullname"),email=v("cl-email"),phone=v("cl-phone"),loc=v("cl-location"),li=v("cl-linkedin");
+  var dateStr=v("cl-date")||new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
+  var manager=v("cl-manager"),company=v("cl-company"),address=v("cl-address"),jobtitle=v("cl-title");
+  var body=v("cl-body"),signoff=v("cl-signoff")||"Sincerely",signame=v("cl-signame")||name;
+  var personalTitle=v("cl-jobtitle-personal");
+  var iE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>';
+  var iP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.28 2 2 0 0 1 3.58 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  var iL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var iLI='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>';
+  var html="";
+  var align=clSettings.headerAlign;
+  if(name) html+='<div class="cl-header-name" style="text-align:'+align+'">'+esc(name)+'</div>';
+  if(personalTitle) html+='<div style="font-size:10px;color:#555;text-align:'+align+';margin-bottom:5px">'+esc(personalTitle)+'</div>';
+  var ci=[];
+  if(email) ci.push('<span class="cl-header-contact-item">'+iE+esc(email)+'</span>');
+  if(phone) ci.push('<span class="cl-header-contact-item">'+iP+esc(phone)+'</span>');
+  if(loc)   ci.push('<span class="cl-header-contact-item">'+iL+esc(loc)+'</span>');
+  if(li)    ci.push('<span class="cl-header-contact-item">'+iLI+esc(li)+'</span>');
+  if(ci.length) html+='<div class="cl-header-contacts" style="justify-content:'+(align==="center"?"center":"flex-start")+'">'+ci.join("")+'</div>';
+  html+='<hr class="cl-header-divider"/>';
+  html+='<div class="cl-date">'+esc(dateStr)+'</div>';
+  if(manager||company||address){
+    html+='<div class="cl-recipient-block">';
+    if(manager) html+='<div class="cl-recipient-company">'+esc(manager)+'</div>';
+    if(company) html+='<div class="cl-recipient-addr">'+esc(company)+'</div>';
+    if(address) html+='<div class="cl-recipient-addr">'+esc(address)+'</div>';
+    html+='</div>';
+  }
+  if(jobtitle||company) html+='<div style="font-size:10.5px;font-weight:700;margin-bottom:14px;color:#111">Re: '+esc([jobtitle,company].filter(Boolean).join(" — "))+'</div>';
+  if(body){
+    html+='<div class="cl-para">'+(manager?"Dear "+esc(manager)+",":"Dear Hiring Manager,")+'</div>';
+    var paras=body.split("\n\n").map(function(p){return p.trim();}).filter(Boolean);
+    html+='<div class="cl-body-paragraphs">';
+    paras.forEach(function(p){html+='<div class="cl-para">'+esc(p).replace(/\n/g,"<br>")+'</div>';});
+    html+='</div>';
+    var sigAlign=clSettings.declPosition;
+    html+='<div class="cl-signoff" style="text-align:'+sigAlign+'">'+esc(signoff)+',</div>';
+    html+='<div style="margin-top:28px"></div>';
+    html+='<div class="cl-sign-name" style="text-align:'+sigAlign+'">'+esc(signame)+'</div>';
+    if(personalTitle) html+='<div style="font-size:9.5px;color:#555;text-align:'+sigAlign+';margin-top:2px">'+esc(personalTitle)+'</div>';
+  } else {
+    html+='<div style="color:#aaa;font-size:12px;text-align:center;padding:60px 0">Generate or write your cover letter →</div>';
+  }
+  return html;
+}
+
+// ── Customize ─────────────────────────────────────────────────────────────────
+function applyCLCustomize(){
+  if(!el("cl-c-font")) return;
+  var g=function(id){return el(id)?el(id).value:"";};
+  var font=g("cl-c-font")||"Inter",fontSize=g("cl-c-fontsize")||10.5,lineHeight=g("cl-c-lineheight")||1.85;
+  var nameSize=g("cl-c-namesize")||20,margin=g("cl-c-margin")||20,vmargin=g("cl-c-vmargin")||18;
+  var paraspacing=g("cl-c-paraspacing")||12;
+  var accent=g("cl-c-accent")||"#111",nameColor=g("cl-c-namecolor")||"#111";
+  var bodyColor=g("cl-c-bodycolor")||"#222",recipColor=g("cl-c-recipientcolor")||"#111";
+  var s=document.getElementById("cl-customize-styles");
+  if(!s){s=document.createElement("style");s.id="cl-customize-styles";document.head.appendChild(s);}
+  s.textContent=".cl-paper{font-family:"+font+",sans-serif!important;padding:"+vmargin+"mm "+margin+"mm!important}"+
+    ".cl-header-name{font-size:"+nameSize+"px!important;color:"+nameColor+"!important}"+
+    ".cl-header-divider{border-top-color:"+accent+"!important}"+
+    ".cl-para,.cl-date,.cl-signoff,.cl-sign-name,.cl-recipient-addr"+
+    "{font-size:"+fontSize+"px!important;line-height:"+lineHeight+"!important;color:"+bodyColor+"!important}"+
+    ".cl-recipient-company{color:"+recipColor+"!important}"+
+    ".cl-body-paragraphs .cl-para{margin-bottom:"+paraspacing+"px!important}"+
+    ".cl-sig-line{border-top-color:"+accent+"!important}";
+  Store.set("jt_clStyle",{font:font,fontSize:fontSize,lineHeight:lineHeight,nameSize:nameSize,margin:margin,vmargin:vmargin,paraspacing:paraspacing,accent:accent,nameColor:nameColor,bodyColor:bodyColor,recipientColor:recipColor,headerAlign:clSettings.headerAlign,sigLine:clSettings.sigLine,declPosition:clSettings.declPosition});
+  renderCL();
+}
+
+function setCLAlign(align,silent){
+  clSettings.headerAlign=align;
+  if(el("cl-align-left"))  el("cl-align-left").className ="btn btn-sm"+(align==="left"?" btn-accent":"");
+  if(el("cl-align-center"))el("cl-align-center").className="btn btn-sm"+(align==="center"?" btn-accent":"");
+  if(!silent){applyCLCustomize();}
+}
+
+function setCLFormat(fmt){
+  if(el("cl-fmt-a4"))    el("cl-fmt-a4").className    ="btn btn-sm"+(fmt==="A4"?" btn-accent":"");
+  if(el("cl-fmt-letter"))el("cl-fmt-letter").className ="btn btn-sm"+(fmt==="Letter"?" btn-accent":"");
+  document.querySelectorAll(".cl-paper").forEach(function(p){p.style.width=fmt==="A4"?"210mm":"215.9mm";});
+}
+
+function setCLAccent(color){
+  if(el("cl-c-accent"))el("cl-c-accent").value=color;
+  if(el("cl-c-namecolor"))el("cl-c-namecolor").value=color;
+  document.querySelectorAll("#blk-cl-colors div[onclick]").forEach(function(sw){
+    sw.style.border=sw.getAttribute("onclick").includes(color)?"2px solid var(--accent)":"2px solid transparent";
+  });
+  applyCLCustomize();
+}
+
+function setSigLine(show,silent){
+  clSettings.sigLine=show;
+  if(el("cl-sigline-show"))el("cl-sigline-show").className="btn btn-sm"+(show?" btn-accent":"");
+  if(el("cl-sigline-hide"))el("cl-sigline-hide").className="btn btn-sm"+(!show?" btn-accent":"");
+  if(!silent) applyCLCustomize();
+}
+
+function setDeclPos(pos,silent){
+  clSettings.declPosition=pos;
+  if(el("cl-decl-left")) el("cl-decl-left").className ="btn btn-sm"+(pos==="left"?" btn-accent":"");
+  if(el("cl-decl-right"))el("cl-decl-right").className="btn btn-sm"+(pos==="right"?" btn-accent":"");
+  if(!silent) applyCLCustomize();
+}
+
+function resetCLStyle(){
+  clSettings={headerAlign:"center",sigLine:true,declPosition:"left"};
+  var setv=function(id,val){var e=el(id);if(e)e.value=val;};
+  setv("cl-c-font","Inter");setv("cl-c-fontsize","10.5");setv("cl-c-lineheight","1.85");
+  setv("cl-c-namesize","20");setv("cl-c-margin","20");setv("cl-c-vmargin","18");
+  setv("cl-c-paraspacing","12");setv("cl-c-accent","#111111");
+  setv("cl-c-namecolor","#111111");setv("cl-c-bodycolor","#222222");setv("cl-c-recipientcolor","#111111");
+  el("cl-c-fontsize-val").textContent="10.5"; el("cl-c-lineheight-val").textContent="1.85";
+  el("cl-c-namesize-val").textContent="20"; el("cl-c-margin-val").textContent="20";
+  el("cl-c-vmargin-val").textContent="18"; el("cl-c-paraspacing-val").textContent="12";
+  setCLAlign("center",true); setSigLine(true,true); setDeclPos("left",true);
+  applyCLCustomize();
+}
+
+// ── AI ────────────────────────────────────────────────────────────────────────
+function populateJobSelect(){
+  var jobs=Store.get("jt_jobs")||[];
+  var sel=el("ai-job-select"); if(!sel) return;
+  sel.innerHTML='<option value="">— Pick a saved job —</option>';
+  jobs.filter(function(j){return j.description;}).forEach(function(j){
+    var opt=document.createElement("option");opt.value=j.id;opt.textContent=j.title+" — "+(j.company||"");
+    sel.appendChild(opt);
+  });
+}
+
+function onJobSelect(){
+  var jobs=Store.get("jt_jobs")||[];
+  var sel=el("ai-job-select");if(!sel||!sel.value)return;
+  var job=jobs.find(function(j){return j.id===sel.value;});
+  if(!job) return;
+  if(job.description){var t=el("ai-jobdesc");if(t)t.value=job.description;}
+  if(job.title&&!v("cl-title")){el("cl-title").value=job.title;}
+  if(job.company&&!v("cl-company")){el("cl-company").value=job.company;}
+  renderCL();
+}
+
+function setAIStatus(msg,err){var s=el("ai-status");if(!s)return;s.innerHTML=msg;s.className="ai-status"+(err?" err":"");}
+
+async function generateCL(){
+  var jobDesc=v("ai-jobdesc");
+  if(!jobDesc){setAIStatus("Select a job or paste a description.",true);return;}
+  setAIStatus('<span class="spinner"></span> Writing…');
+  var r=Store.get("jt_resume")||{};
+  var name=[r.fname,r.lname].filter(Boolean).join(" ");
+  var expText=(r.expEntries||[]).map(function(e){return (e.title||"")+" at "+(e.company||"");}).join(", ");
+  var prompt="Write a professional tailored cover letter body only (no date/address/salutation/sign-off). 3-4 paragraphs. Separate with blank lines. Return only the body text.\n\nCANDIDATE: "+name+"\nSUMMARY: "+(r.summary||"")+"\nEXPERIENCE: "+expText+"\nSKILLS: "+(r.skills||"")+"\nJOB: "+v("cl-title")+" at "+v("cl-company")+"\nJOB DESCRIPTION:\n"+jobDesc;
+  try{
+    var text=await callGemini(prompt,false);
+    el("cl-body").value=text.trim();
+    saveCL(); renderCL();
+    setAIStatus("✓ Generated!");
+  }catch(e){setAIStatus("Error: "+e.message,true);}
+}
+
+// Expose
+
+async function downloadCLPDF() {
+  var btn = el("cl-download-btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating…';
+
+  try {
+    var health = await fetch(getPDFServerURL().includes("localhost") ? "http://localhost:5050/health" : "/api/generate-pdf", { signal: AbortSignal.timeout(2000) });
+    if (!health.ok) throw new Error();
+  } catch(e) {
+    showToast("Tip: Run pdf_server.py locally for ATS-readable PDFs. Using browser print now.", false);
+    btn.disabled = false;
+    btn.innerHTML = "⬇ Download PDF";
+    window.print();
+    return;
+  }
+
+  try {
+    // Get the rendered cover letter HTML from the preview
+    var paperEl = el("cl-paper-content");
+    var clStyle = Store.get("jt_clStyle") || {};
+    var font    = clStyle.font || "Inter";
+    var fs      = clStyle.fontSize || 10.5;
+    var lh      = clStyle.lineHeight || 1.85;
+    var margin  = clStyle.margin || 20;
+    var vmargin = clStyle.vmargin || 18;
+    var accent  = clStyle.accent || "#111111";
+    var nameColor = clStyle.nameColor || "#111111";
+
+    // Build a clean standalone HTML for the cover letter
+    var clHTML = "<!DOCTYPE html><html><head><meta charset='UTF-8'/><style>" +
+      "* { box-sizing:border-box; margin:0; padding:0; }" +
+      "body { font-family:'" + font + "',Arial,sans-serif; font-size:" + fs + "pt; line-height:" + lh + "; color:#222; background:white; padding:" + vmargin + "mm " + margin + "mm; }" +
+      ".cl-header-name { font-size:20pt; font-weight:800; text-align:center; color:" + nameColor + "; margin-bottom:4pt; }" +
+      ".cl-header-contacts { display:flex; flex-wrap:wrap; justify-content:center; gap:2pt 10pt; margin-bottom:8pt; font-size:9pt; color:#444; }" +
+      ".cl-header-contact-item { display:flex; align-items:center; gap:3pt; }" +
+      ".cl-header-contact-item svg { display:none; }" +
+      ".cl-header-divider { border:none; border-top:1.5pt solid " + accent + "; margin-bottom:12pt; }" +
+      ".cl-date { font-size:" + fs + "pt; color:#444; margin-bottom:12pt; }" +
+      ".cl-recipient-block { margin-bottom:14pt; }" +
+      ".cl-recipient-company { font-size:" + (parseFloat(fs)+0.5) + "pt; font-weight:700; color:#111; }" +
+      ".cl-recipient-addr { font-size:" + fs + "pt; color:#555; line-height:1.6; }" +
+      ".cl-para { font-size:" + fs + "pt; line-height:" + lh + "; color:#222; margin-bottom:10pt; text-align:justify; }" +
+      ".cl-body-paragraphs { margin-bottom:18pt; }" +
+      ".cl-signoff { font-size:" + fs + "pt; margin-bottom:28pt; }" +
+      ".cl-sig-line { width:80pt; border-top:1.5pt solid " + accent + "; margin:4pt 0; }" +
+      ".cl-sign-name { font-size:12pt; font-weight:700; color:#111; }" +
+      "</style></head><body>" +
+      (paperEl ? paperEl.innerHTML : "") +
+      "</body></html>";
+
+    // Send structured data to server — it builds clean PDF server-side
+    var clData = Store.get("jt_cl") || {};
+    var clStyleData = Store.get("jt_clStyle") || {};
+
+    var res = await fetch(getPDFServerURL(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "coverletter", coverLetter: clData, style: clStyleData })
+    });
+
+    if (!res.ok) { var err = await res.json(); throw new Error(err.error||"Failed"); }
+
+    var blob = await res.blob();
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement("a");
+    a.href   = url;
+    a.download = (clData.fullname||"cover_letter").replace(/ /g,"_") + "_cover_letter.pdf";
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("PDF downloaded!");
+  } catch(e) {
+    showToast("Error: " + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = "⬇ Download PDF";
+  }
+}
+
+window.switchTab=switchTab; window.toggleBlock=toggleBlock;
+window.syncPersonal=syncPersonal; window.saveCL=saveCL; window.renderCL=renderCL;
+window.applyCLCustomize=applyCLCustomize; window.setCLAlign=setCLAlign;
+window.setCLFormat=setCLFormat; window.setCLAccent=setCLAccent;
+window.setSigLine=setSigLine; window.setDeclPos=setDeclPos; window.resetCLStyle=resetCLStyle;
+window.downloadCLPDF=downloadCLPDF;
+window.onJobSelect=onJobSelect; window.generateCL=generateCL;
+
+document.addEventListener("DOMContentLoaded",function(){loadSaved();});
+</script>
+</body>
+</html>
