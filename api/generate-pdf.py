@@ -76,7 +76,7 @@ def build_resume_pdf(data):
                        alignment=TA_RIGHT),
         "italic":  sty("italic",  fontName="Helvetica-Oblique",
                        textColor=colors.Color(0.2,0.2,0.2)),
-        "bullet":  sty("bullet",  leftIndent=14, firstLineIndent=-14, spaceAfter=1),
+        "bullet":  sty("bullet",  leftIndent=8, firstLineIndent=-8, spaceAfter=1),
         "skills":  sty("skills",  spaceAfter=2),
     }
 
