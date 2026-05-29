@@ -1,45 +1,8 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/generate-pdf.py",
-      "use": "@vercel/python"
-    },
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.js",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/generate-pdf",
-      "dest": "api/generate-pdf.py"
-    },
-    {
-      "src": "/resume",
-      "dest": "/resume.html"
-    },
-    {
-      "src": "/cover-letter",
-      "dest": "/cover-letter.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
-      ]
-    }
+  "rewrites": [
+    { "source": "/api/generate-pdf", "destination": "/api/generate-pdf.py" },
+    { "source": "/resume",           "destination": "/resume.html" },
+    { "source": "/cover-letter",     "destination": "/cover-letter.html" },
+    { "source": "/tracker",          "destination": "/index.html" }
   ]
 }
