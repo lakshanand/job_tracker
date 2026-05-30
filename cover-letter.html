@@ -575,7 +575,22 @@ window.setSigLine=setSigLine; window.setDeclPos=setDeclPos; window.resetCLStyle=
 window.downloadCLPDF=downloadCLPDF;
 window.onJobSelect=onJobSelect; window.generateCL=generateCL;
 
-document.addEventListener("DOMContentLoaded",function(){loadSaved();});
+document.addEventListener("DOMContentLoaded", async function(){
+  renderSidebar("coverletter");
+  if(window.getSupabase) {
+    try {
+      var sb = await getSupabase();
+      if(sb) {
+        for(var i=0; i<6; i++) {
+          var { data } = await sb.auth.getSession();
+          if(data.session) break;
+          await new Promise(function(r){ setTimeout(r,500); });
+        }
+      }
+    } catch(e) {}
+  }
+  await loadSaved();
+});
 </script>
 </body>
 </html>

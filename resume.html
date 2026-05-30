@@ -853,7 +853,26 @@ window.setAccentColor=setAccentColor; window.setAccentColorDirect=setAccentColor
 window.pickCustomColor=pickCustomColor; window.setFontStyle=setFontStyle;
 window.setFont=setFont; window.setNameSize=setNameSize;
 
-document.addEventListener("DOMContentLoaded",function(){ loadSaved(); renderResume(); });
+document.addEventListener("DOMContentLoaded", async function(){
+  renderSidebar("resume");
+  // Wait for Supabase auth session before loading data
+  if(window.getSupabase) {
+    try {
+      var sb = await getSupabase();
+      if(sb) {
+        // Poll until session is confirmed (max 3s)
+        for(var i=0; i<6; i++) {
+          var { data } = await sb.auth.getSession();
+          if(data.session) break;
+          await new Promise(function(r){ setTimeout(r, 500); });
+        }
+      }
+    } catch(e) {}
+  }
+  await loadSaved();
+  renderResume();
+  applyCustomize();
+});
 </script>
 </body>
 </html>

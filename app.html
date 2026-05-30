@@ -131,14 +131,19 @@ document.write(renderSidebar("tracker"));
 <div class="toast" id="toast"></div>
 
 <script>
-var jobs = Store.get("jt_jobs") || [];
+var jobs = Store.get("jt_jobs") || []; // loaded from Supabase on DOMContentLoaded
 var jobIdCounter = Store.get("jt_jobCounter") || 0;
 var editingJobId = null;
 
 var STATUSES = ["Applied","Phone screen","Interview","Offer","Rejected"];
 var STATUS_COLORS = {"Applied":"#3b82f6","Phone screen":"#f59e0b","Interview":"#8b5cf6","Offer":"#16a34a","Rejected":"#dc2626"};
 
-function saveJobs() { Store.set("jt_jobs", jobs); Store.set("jt_jobCounter", jobIdCounter); }
+function saveJobs() {
+  Store.set("jt_jobs", jobs);
+  Store.set("jt_jobCounter", jobIdCounter);
+  // Async save to Supabase
+  if(window.dbSaveJobs) dbSaveJobs(jobs).catch(function(e){ console.warn("Supabase save failed:", e); });
+}
 
 function renderKanban() {
   var board = el("kanban-board");
@@ -326,7 +331,29 @@ window.openAddModal=openAddModal; window.openEditModal=openEditModal;
 window.closeModal=closeModal; window.saveJob=saveJob; window.deleteJob=deleteJob;
 window.scoreJob=scoreJob; window.generateJobCL=generateJobCL;
 
-renderKanban();
+// ── Init: wait for Supabase auth then load data ──────────────────────────────
+(async function init() {
+  renderSidebar("tracker");
+  if(window.getSupabase) {
+    try {
+      var sb = await getSupabase();
+      if(sb) {
+        for(var i=0; i<6; i++) {
+          var { data } = await sb.auth.getSession();
+          if(data.session) break;
+          await new Promise(function(r){ setTimeout(r,500); });
+        }
+        // Load jobs from Supabase
+        var remoteJobs = await dbLoadJobs();
+        if(remoteJobs && remoteJobs.length > 0) {
+          jobs = remoteJobs;
+          Store.set("jt_jobs", jobs);
+        }
+      }
+    } catch(e) { console.warn("Supabase init failed, using local data:", e); }
+  }
+  renderKanban();
+})();
 </script>
 </body>
 </html>
