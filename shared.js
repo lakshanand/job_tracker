@@ -409,10 +409,21 @@ async function getSupabase() {
         }, 50);
         return;
       }
-      var s = document.createElement("script");
-      s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
-      s.onload = resolve; s.onerror = reject;
-      document.head.appendChild(s);
+      // Try multiple CDNs in case one is blocked by tracking prevention
+      var cdns = [
+        "/supabase.min.js",
+        "https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js",
+        "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"
+      ];
+      function tryNextCDN(i) {
+        if(i >= cdns.length) { reject(new Error("Could not load Supabase")); return; }
+        var s = document.createElement("script");
+        s.src = cdns[i];
+        s.onload = resolve;
+        s.onerror = function() { tryNextCDN(i + 1); };
+        document.head.appendChild(s);
+      }
+      tryNextCDN(0);
     });
   }
   try {
