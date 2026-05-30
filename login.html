@@ -181,29 +181,37 @@
 </div>
 
 <script>
-// ── Supabase config ───────────────────────────────────────────────────────────
-// These are your PUBLIC keys — safe to include in frontend code
-// (Supabase Row Level Security protects your data, not the keys)
-var SUPABASE_URL  = "https://qjofwykdmkcsvdrwlpmg.supabase.co";
-var SUPABASE_ANON = ""; // ← paste your anon key here
+// ── Load Supabase + config ────────────────────────────────────────────────────
+async function initSupabase() {
+  // Load Supabase JS
+  await new Promise(function(resolve) {
+    var s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
+    s.onload = resolve;
+    document.head.appendChild(s);
+  });
 
-// Load Supabase JS from CDN then initialize
-(function() {
-  var s = document.createElement("script");
-  s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
-  s.onload = function() {
-    if(!SUPABASE_ANON) {
-      showMsg("Supabase anon key not set. Open login.html and paste your key.", "error");
-      return;
-    }
-    window._supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-    checkExistingSession();
-  };
-  s.onerror = function() {
-    showMsg("Failed to load Supabase. Check your internet connection.", "error");
-  };
-  document.head.appendChild(s);
-})();
+  // Fetch config from Vercel function
+  var cfg;
+  try {
+    var res = await fetch("/api/config");
+    cfg = await res.json();
+  } catch(e) {
+    // Local dev fallback — set these for local testing
+    cfg = { supabaseUrl: "", supabaseAnon: "" };
+  }
+
+  if(!cfg.supabaseUrl) {
+    document.getElementById("msg").textContent = "Configuration error. Please try again later.";
+    document.getElementById("msg").className = "msg error";
+    return;
+  }
+
+  window._supabase = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnon);
+  checkExistingSession();
+}
+
+initSupabase();
 
 // ── UI helpers ────────────────────────────────────────────────────────────────
 function switchTab(tab) {
@@ -261,13 +269,12 @@ async function checkExistingSession() {
   var session = await window._supabase.auth.getSession();
   if(session.data.session) {
     // Already logged in — redirect to app
-    window.location.href = "app.html";
+    window.location.href = "index.html";
   }
 }
 
 // ── Sign In ───────────────────────────────────────────────────────────────────
 async function signIn() {
-  if(!window._supabase) { showMsg("Still loading — please wait a moment and try again."); return; }
   var email    = document.getElementById("si-email").value.trim();
   var password = document.getElementById("si-password").value;
   if(!email || !password) { showMsg("Please fill in all fields."); return; }
@@ -283,13 +290,12 @@ async function signIn() {
     setLoading("btn-signin", false);
     document.getElementById("btn-signin").textContent = "Sign In";
   } else {
-    window.location.href = "app.html";
+    window.location.href = "index.html";
   }
 }
 
 // ── Sign Up ───────────────────────────────────────────────────────────────────
 async function signUp() {
-  if(!window._supabase) { showMsg("Still loading — please wait a moment and try again."); return; }
   var email    = document.getElementById("su-email").value.trim();
   var password = document.getElementById("su-password").value;
   var confirm  = document.getElementById("su-confirm").value;
@@ -320,11 +326,10 @@ async function signUp() {
 
 // ── Google Sign In ────────────────────────────────────────────────────────────
 async function signInWithGoogle() {
-  if(!window._supabase) { showMsg("Still loading — please wait a moment and try again."); return; }
   clearMsg();
   var result = await window._supabase.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: window.location.origin + "/app.html" }
+    options: { redirectTo: window.location.origin + "/index.html" }
   });
   if(result.error) showMsg(result.error.message);
 }
@@ -337,7 +342,7 @@ async function resetPassword() {
   setLoading("btn-reset", true);
 
   var result = await window._supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + "/app.html"
+    redirectTo: window.location.origin + "/index.html"
   });
 
   document.getElementById("btn-reset").textContent = "Send Reset Link";
