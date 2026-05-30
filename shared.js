@@ -440,43 +440,35 @@ async function signOut() {
   window.location.href = "login.html";
 }
 
-async function dbSave(table, dataObj) {
+// ── Core db helpers ───────────────────────────────────────────────────────────
+async function _dbUpsert(table, fields) {
   var sb = await getSupabase();
   var user = await getUser();
-  if(!sb || !user) { Store.set("jt_" + table, dataObj); return; }
-  // Check if row exists first
-  var { data: existing } = await sb.from(table).select("id").eq("user_id", user.id).single();
-  if(existing) {
-    await sb.from(table).update({ data: dataObj, updated_at: new Date().toISOString() }).eq("user_id", user.id);
-  } else {
-    await sb.from(table).insert({ user_id: user.id, data: dataObj, updated_at: new Date().toISOString() });
+  if(!sb || !user) return false;
+  try {
+    var { data: existing } = await sb.from(table)
+      .select("id").eq("user_id", user.id).maybeSingle();
+    var payload = Object.assign({ updated_at: new Date().toISOString() }, fields);
+    if(existing) {
+      await sb.from(table).update(payload).eq("user_id", user.id);
+    } else {
+      await sb.from(table).insert(Object.assign({ user_id: user.id }, payload));
+    }
+    return true;
+  } catch(e) {
+    console.warn("Supabase upsert failed for", table, e.message || e);
+    return false;
   }
-  Store.set("jt_" + table, dataObj);
 }
 
-async function dbLoad(table) {
-  var sb = await getSupabase();
-  var user = await getUser();
-  if(!sb || !user) return Store.get("jt_" + table);
-  var { data } = await sb.from(table).select("data").eq("user_id", user.id).single();
-  if(data && data.data) {
-    Store.set("jt_" + table, data.data); // sync to local
-    return data.data;
-  }
-  return Store.get("jt_" + table); // fallback to local
+async function dbSave(table, dataObj) {
+  Store.set("jt_" + table, dataObj);
+  await _dbUpsert(table, { data: dataObj });
 }
 
 async function dbSaveStyle(table, styleObj) {
-  var sb = await getSupabase();
-  var user = await getUser();
-  if(!sb || !user) { Store.set("jt_" + table + "Style", styleObj); return; }
-  var { data: existing } = await sb.from(table).select("id").eq("user_id", user.id).single();
-  if(existing) {
-    await sb.from(table).update({ style: styleObj, updated_at: new Date().toISOString() }).eq("user_id", user.id);
-  } else {
-    await sb.from(table).insert({ user_id: user.id, style: styleObj, updated_at: new Date().toISOString() });
-  }
   Store.set("jt_" + table + "Style", styleObj);
+  await _dbUpsert(table, { style: styleObj });
 }
 
 async function dbLoadStyle(table) {
@@ -489,17 +481,24 @@ async function dbLoadStyle(table) {
 }
 
 async function dbSaveJobs(jobs) {
+  Store.set("jt_jobs", jobs);
   var sb = await getSupabase();
   var user = await getUser();
-  Store.set("jt_jobs", jobs);
   if(!sb || !user) return;
-  // Check if row exists
-  var { data: existing } = await sb.from("jobs").select("id").eq("user_id", user.id).eq("job_id", "all").single();
-  if(existing) {
-    await sb.from("jobs").update({ data: jobs, updated_at: new Date().toISOString() }).eq("user_id", user.id).eq("job_id", "all");
-  } else {
-    await sb.from("jobs").insert({ user_id: user.id, job_id: "all", data: jobs, updated_at: new Date().toISOString() });
-  }
+  try {
+    var { data: existing } = await sb.from("jobs")
+      .select("id").eq("user_id", user.id).eq("job_id", "all").maybeSingle();
+    if(existing) {
+      await sb.from("jobs").update({
+        data: jobs, updated_at: new Date().toISOString()
+      }).eq("user_id", user.id).eq("job_id", "all");
+    } else {
+      await sb.from("jobs").insert({
+        user_id: user.id, job_id: "all",
+        data: jobs, updated_at: new Date().toISOString()
+      });
+    }
+  } catch(e) { console.warn("Supabase jobs save failed:", e.message || e); }
 }
 
 async function dbLoadJobs() {
