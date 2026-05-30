@@ -394,47 +394,54 @@ var SHARED_CSS = `
 // ── Sidebar HTML ──────────────────────────────────────────────────────────────
 
 // ── Supabase Auth & Data ──────────────────────────────────────────────────────
-var _sb = null;
 
 async function getSupabase() {
-  // Use window-level singleton to prevent multiple GoTrueClient instances
-  if(window.__jt_sb) { _sb = window.__jt_sb; return _sb; }
-  if(_sb) { window.__jt_sb = _sb; return _sb; }
+  // Strict singleton — one client per browser tab, ever
+  if(window.__jt_sb) return window.__jt_sb;
+
+  // Load SDK if not already present
   if(!window.supabase) {
-    await new Promise(function(resolve, reject) {
-      // Check if script already loading/loaded
-      if(document.querySelector('script[src*="supabase"]')) {
-        var check = setInterval(function(){
-          if(window.supabase){ clearInterval(check); resolve(); }
-        }, 50);
-        return;
-      }
-      // Try multiple CDNs in case one is blocked by tracking prevention
-      var cdns = [
-        "/supabase.min.js",
-        "https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js",
-        "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"
-      ];
-      function tryNextCDN(i) {
-        if(i >= cdns.length) { reject(new Error("Could not load Supabase")); return; }
-        var s = document.createElement("script");
-        s.src = cdns[i];
-        s.onload = resolve;
-        s.onerror = function() { tryNextCDN(i + 1); };
-        document.head.appendChild(s);
-      }
-      tryNextCDN(0);
-    });
-  }
-  try {
-    var res = await fetch("/api/config");
-    var cfg = await res.json();
-    if(cfg.supabaseUrl && cfg.supabaseAnon) {
-      _sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnon);
-      window.__jt_sb = _sb;
+    // Don't add a second script tag if one is already loading
+    if(!window.__jt_sb_loading) {
+      window.__jt_sb_loading = new Promise(function(resolve, reject) {
+        if(document.querySelector('script[src*="supabase"]')) {
+          var check = setInterval(function(){
+            if(window.supabase){ clearInterval(check); resolve(); }
+          }, 50);
+          return;
+        }
+        var cdns = [
+          "/supabase.min.js",
+          "https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js",
+          "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"
+        ];
+        function tryNext(i) {
+          if(i >= cdns.length){ reject(new Error("Supabase SDK failed to load")); return; }
+          var s = document.createElement("script");
+          s.src = cdns[i];
+          s.onload = resolve;
+          s.onerror = function(){ tryNext(i+1); };
+          document.head.appendChild(s);
+        }
+        tryNext(0);
+      });
     }
-  } catch(e) { console.warn("Supabase config error:", e); }
-  return _sb;
+    await window.__jt_sb_loading;
+  }
+
+  // Only create the client once
+  if(!window.__jt_sb) {
+    try {
+      var res = await fetch("/api/config");
+      var cfg = await res.json();
+      if(cfg.supabaseUrl && cfg.supabaseAnon) {
+        window.__jt_sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnon, {
+          auth: { storageKey: "jt_auth", persistSession: true }
+        });
+      }
+    } catch(e) { console.warn("Supabase config error:", e); }
+  }
+  return window.__jt_sb || null;
 }
 
 async function requireAuth() {
