@@ -435,9 +435,7 @@ async function getSupabase() {
       var res = await fetch("/api/config");
       var cfg = await res.json();
       if(cfg.supabaseUrl && cfg.supabaseAnon) {
-        window.__jt_sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnon, {
-          auth: { storageKey: "jt_auth", persistSession: true }
-        });
+        window.__jt_sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnon);
       }
     } catch(e) { console.warn("Supabase config error:", e); }
   }
@@ -448,20 +446,16 @@ async function requireAuth() {
   var sb = await getSupabase();
   if(!sb) return null;
 
-  return new Promise(function(resolve) {
-    // onAuthStateChange fires immediately with current session state
-    var unsub = sb.auth.onAuthStateChange(function(event, session) {
-      unsub.data.subscription.unsubscribe();
-      if(session) {
-        resolve(session.user);
-      } else {
-        if(!window.location.href.includes("login.html")) {
-          window.location.href = "login.html";
-        }
-        resolve(null);
-      }
-    });
-  });
+  // getSession() reads from local storage synchronously — no need to poll
+  var { data } = await sb.auth.getSession();
+  if(data && data.session) return data.session.user;
+
+  // No session — redirect once, don't loop
+  if(!window.__jt_redirecting) {
+    window.__jt_redirecting = true;
+    window.location.href = "login.html";
+  }
+  return null;
 }
 
 async function getUser() {
