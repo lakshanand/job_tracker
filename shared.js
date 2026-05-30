@@ -504,12 +504,16 @@ async function _dbUpsert(table, fields) {
 
 async function dbSave(table, dataObj) {
   Store.set("jt_" + table, dataObj);
-  await _dbUpsert(table, { data: dataObj });
+  // Include style in insert to satisfy NOT NULL constraint
+  var existingStyle = Store.get("jt_" + table + "Style") || {};
+  await _dbUpsert(table, { data: dataObj, style: existingStyle });
 }
 
 async function dbSaveStyle(table, styleObj) {
   Store.set("jt_" + table + "Style", styleObj);
-  await _dbUpsert(table, { style: styleObj });
+  // Include data in insert to satisfy NOT NULL constraint
+  var existingData = Store.get("jt_" + table) || {};
+  await _dbUpsert(table, { data: existingData, style: styleObj });
 }
 
 
