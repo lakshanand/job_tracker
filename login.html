@@ -318,9 +318,8 @@ async function signUp() {
     setLoading("btn-signup", false);
     document.getElementById("btn-signup").textContent = "Create Account";
   } else {
-    // Show verify email screen
-    document.getElementById("verify-email").textContent = email;
-    showView("view-verify");
+    // Email confirmation is disabled — user is signed in immediately
+    window.location.href = "app.html";
   }
 }
 
