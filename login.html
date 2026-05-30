@@ -269,7 +269,7 @@ async function checkExistingSession() {
   var session = await window._supabase.auth.getSession();
   if(session.data.session) {
     // Already logged in — redirect to app
-    window.location.href = "index.html";
+    window.location.href = "app.html";
   }
 }
 
@@ -290,7 +290,7 @@ async function signIn() {
     setLoading("btn-signin", false);
     document.getElementById("btn-signin").textContent = "Sign In";
   } else {
-    window.location.href = "index.html";
+    window.location.href = "app.html";
   }
 }
 
