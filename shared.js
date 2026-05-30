@@ -444,11 +444,14 @@ async function dbSave(table, dataObj) {
   var sb = await getSupabase();
   var user = await getUser();
   if(!sb || !user) { Store.set("jt_" + table, dataObj); return; }
-  await sb.from(table).upsert(
-    { user_id: user.id, data: dataObj, updated_at: new Date().toISOString() },
-    { onConflict: "user_id" }
-  );
-  Store.set("jt_" + table, dataObj); // also keep local copy
+  // Check if row exists first
+  var { data: existing } = await sb.from(table).select("id").eq("user_id", user.id).single();
+  if(existing) {
+    await sb.from(table).update({ data: dataObj, updated_at: new Date().toISOString() }).eq("user_id", user.id);
+  } else {
+    await sb.from(table).insert({ user_id: user.id, data: dataObj, updated_at: new Date().toISOString() });
+  }
+  Store.set("jt_" + table, dataObj);
 }
 
 async function dbLoad(table) {
@@ -467,10 +470,12 @@ async function dbSaveStyle(table, styleObj) {
   var sb = await getSupabase();
   var user = await getUser();
   if(!sb || !user) { Store.set("jt_" + table + "Style", styleObj); return; }
-  await sb.from(table).upsert(
-    { user_id: user.id, style: styleObj, updated_at: new Date().toISOString() },
-    { onConflict: "user_id" }
-  );
+  var { data: existing } = await sb.from(table).select("id").eq("user_id", user.id).single();
+  if(existing) {
+    await sb.from(table).update({ style: styleObj, updated_at: new Date().toISOString() }).eq("user_id", user.id);
+  } else {
+    await sb.from(table).insert({ user_id: user.id, style: styleObj, updated_at: new Date().toISOString() });
+  }
   Store.set("jt_" + table + "Style", styleObj);
 }
 
@@ -486,13 +491,15 @@ async function dbLoadStyle(table) {
 async function dbSaveJobs(jobs) {
   var sb = await getSupabase();
   var user = await getUser();
-  Store.set("jt_jobs", jobs); // always keep local copy
+  Store.set("jt_jobs", jobs);
   if(!sb || !user) return;
-  // Store entire jobs array as single JSON blob for simplicity
-  await sb.from("jobs").upsert(
-    { user_id: user.id, job_id: "all", data: jobs, updated_at: new Date().toISOString() },
-    { onConflict: "user_id,job_id" }
-  );
+  // Check if row exists
+  var { data: existing } = await sb.from("jobs").select("id").eq("user_id", user.id).eq("job_id", "all").single();
+  if(existing) {
+    await sb.from("jobs").update({ data: jobs, updated_at: new Date().toISOString() }).eq("user_id", user.id).eq("job_id", "all");
+  } else {
+    await sb.from("jobs").insert({ user_id: user.id, job_id: "all", data: jobs, updated_at: new Date().toISOString() });
+  }
 }
 
 async function dbLoadJobs() {
