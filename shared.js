@@ -392,6 +392,121 @@ var SHARED_CSS = `
 `;
 
 // ── Sidebar HTML ──────────────────────────────────────────────────────────────
+
+// ── Supabase Auth & Data ──────────────────────────────────────────────────────
+var _sb = null;
+
+async function getSupabase() {
+  if(_sb) return _sb;
+  if(!window.supabase) {
+    await new Promise(function(resolve, reject) {
+      var s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+  try {
+    var res = await fetch("/api/config");
+    var cfg = await res.json();
+    if(cfg.supabaseUrl && cfg.supabaseAnon) {
+      _sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnon);
+    }
+  } catch(e) { console.warn("Supabase config error:", e); }
+  return _sb;
+}
+
+async function requireAuth() {
+  var sb = await getSupabase();
+  if(!sb) return null; // not configured — allow use without login
+  var { data } = await sb.auth.getSession();
+  if(!data.session) {
+    window.location.href = "login.html";
+    return null;
+  }
+  return data.session.user;
+}
+
+async function getUser() {
+  var sb = await getSupabase();
+  if(!sb) return null;
+  var { data } = await sb.auth.getSession();
+  return data.session ? data.session.user : null;
+}
+
+async function signOut() {
+  var sb = await getSupabase();
+  if(sb) await sb.auth.signOut();
+  window.location.href = "login.html";
+}
+
+async function dbSave(table, dataObj) {
+  var sb = await getSupabase();
+  var user = await getUser();
+  if(!sb || !user) { Store.set("jt_" + table, dataObj); return; }
+  await sb.from(table).upsert(
+    { user_id: user.id, data: dataObj, updated_at: new Date().toISOString() },
+    { onConflict: "user_id" }
+  );
+  Store.set("jt_" + table, dataObj); // also keep local copy
+}
+
+async function dbLoad(table) {
+  var sb = await getSupabase();
+  var user = await getUser();
+  if(!sb || !user) return Store.get("jt_" + table);
+  var { data } = await sb.from(table).select("data").eq("user_id", user.id).single();
+  if(data && data.data) {
+    Store.set("jt_" + table, data.data); // sync to local
+    return data.data;
+  }
+  return Store.get("jt_" + table); // fallback to local
+}
+
+async function dbSaveStyle(table, styleObj) {
+  var sb = await getSupabase();
+  var user = await getUser();
+  if(!sb || !user) { Store.set("jt_" + table + "Style", styleObj); return; }
+  await sb.from(table).upsert(
+    { user_id: user.id, style: styleObj, updated_at: new Date().toISOString() },
+    { onConflict: "user_id" }
+  );
+  Store.set("jt_" + table + "Style", styleObj);
+}
+
+async function dbLoadStyle(table) {
+  var sb = await getSupabase();
+  var user = await getUser();
+  if(!sb || !user) return Store.get("jt_" + table + "Style");
+  var { data } = await sb.from(table).select("style").eq("user_id", user.id).single();
+  if(data && data.style) return data.style;
+  return Store.get("jt_" + table + "Style");
+}
+
+async function dbSaveJobs(jobs) {
+  var sb = await getSupabase();
+  var user = await getUser();
+  Store.set("jt_jobs", jobs); // always save locally
+  if(!sb || !user) return;
+  await sb.from("jobs").delete().eq("user_id", user.id);
+  var rows = Object.entries(jobs).map(function(entry) {
+    return { user_id: user.id, job_id: entry[0], data: entry[1] };
+  });
+  if(rows.length > 0) await sb.from("jobs").insert(rows);
+}
+
+async function dbLoadJobs() {
+  var sb = await getSupabase();
+  var user = await getUser();
+  if(!sb || !user) return Store.get("jt_jobs") || {};
+  var { data } = await sb.from("jobs").select("job_id, data").eq("user_id", user.id);
+  if(!data || data.length === 0) return Store.get("jt_jobs") || {};
+  var jobs = {};
+  data.forEach(function(row) { jobs[row.job_id] = row.data; });
+  Store.set("jt_jobs", jobs);
+  return jobs;
+}
+
 function renderSidebar(activePage) {
   var pages = [
     { id:"resume",       href:"resume.html",       icon:"📄", label:"Resume" },
