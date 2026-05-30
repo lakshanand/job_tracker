@@ -416,6 +416,9 @@ function renderSidebar(activePage) {
         '<span style="flex:1">API Key</span>'+
         '<span id="key-status-dot" style="width:8px;height:8px;border-radius:50%;background:'+(getGeminiKey()?"#16a34a":"#dc2626")+';flex-shrink:0"></span>'+
       '</button>'+
+      '<button class="sidebar-item" onclick="signOut()" style="color:#e91e8c">'+
+        '<span style="font-size:17px">🚪</span>Sign Out'+
+      '</button>'+
     '</div>'+
   '</div>';
 }
@@ -451,6 +454,15 @@ function importData(event) {
 // Expose globally
 window.exportData = exportData;
 window.getGeminiKey = getGeminiKey;
+window.requireAuth = requireAuth;
+window.getUser = getUser;
+window.signOut = signOut;
+window.dbSave = dbSave;
+window.dbLoad = dbLoad;
+window.dbSaveStyle = dbSaveStyle;
+window.dbLoadStyle = dbLoadStyle;
+window.dbSaveJobs = dbSaveJobs;
+window.dbLoadJobs = dbLoadJobs;
 window.promptForKey = promptForKey;
 window.clearGeminiKey = clearGeminiKey;
 window.importData = importData;
