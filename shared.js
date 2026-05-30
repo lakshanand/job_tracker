@@ -496,11 +496,10 @@ async function _dbUpsert(table, fields) {
   }
   
   if(result.error) {
-    console.error("_dbUpsert write error on", table, ":", result.error.message);
+    console.error("_dbUpsert write error on", table, ":", result.error);
     showToast("Save failed: " + result.error.message, true);
     return false;
   }
-  
   return true;
 }
 
@@ -549,21 +548,28 @@ async function dbSaveJobs(jobs) {
   var sb = await getSupabase();
   var user = await getUser();
   if(!sb || !user) return;
-  try {
-    var jobsCheck = await sb.from("jobs")
-      .select("id").eq("user_id", user.id).eq("job_id", "all").limit(1);
-    var existing = jobsCheck.data && jobsCheck.data.length > 0 ? jobsCheck.data[0] : null;
-    if(existing) {
-      await sb.from("jobs").update({
-        data: jobs, updated_at: new Date().toISOString()
-      }).eq("user_id", user.id).eq("job_id", "all");
-    } else {
-      await sb.from("jobs").insert({
-        user_id: user.id, job_id: "all",
-        data: jobs, updated_at: new Date().toISOString()
-      });
-    }
-  } catch(e) { console.warn("Supabase jobs save failed:", e.message || e); }
+
+  // Check if row exists
+  var checkRes = await sb.from("jobs")
+    .select("id").eq("user_id", user.id).eq("job_id", "all").limit(1);
+  console.log("jobs check:", checkRes);
+
+  var result;
+  if(checkRes.data && checkRes.data.length > 0) {
+    result = await sb.from("jobs")
+      .update({ data: jobs })
+      .eq("user_id", user.id).eq("job_id", "all");
+  } else {
+    result = await sb.from("jobs")
+      .insert({ user_id: user.id, job_id: "all", data: jobs });
+  }
+
+  if(result.error) {
+    console.error("jobs save error:", result.error);
+    showToast("Jobs save error: " + result.error.message, true);
+  } else {
+    console.log("jobs saved ok");
+  }
 }
 
 async function dbLoadJobs() {
