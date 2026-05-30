@@ -259,7 +259,15 @@ function switchTab(tab) {
 function toggleBlock(id){el(id)&&el(id).classList.toggle("open");}
 
 // ── Load / Save ───────────────────────────────────────────────────────────────
-function loadSaved(){
+async function loadSaved(){
+  if(window.dbLoad){
+    try{
+      var remote=await dbLoad("cover_letters");
+      if(remote) Store.set("jt_cl",remote);
+      var remoteStyle=await dbLoadStyle("cover_letters");
+      if(remoteStyle) Store.set("jt_clStyle",remoteStyle);
+    }catch(e){ console.warn("Supabase CL load failed:",e); }
+  }
   var d=Store.get("jt_cl")||{};
   var setv=function(id,val){var e=el(id);if(e&&val!=null)e.value=val;};
   setv("cl-fullname",d.fullname); setv("cl-jobtitle-personal",d.jobtitlePersonal);
@@ -296,6 +304,8 @@ function loadSaved(){
 
 function saveCL(){
   Store.set("jt_cl",{fullname:v("cl-fullname"),jobtitlePersonal:v("cl-jobtitle-personal"),email:v("cl-email"),phone:v("cl-phone"),location:v("cl-location"),linkedin:v("cl-linkedin"),date:v("cl-date"),manager:v("cl-manager"),company:v("cl-company"),address:v("cl-address"),title:v("cl-title"),body:v("cl-body"),signoff:v("cl-signoff"),signame:v("cl-signame")});
+  if(window.dbSave) dbSave("cover_letters", Store.get("jt_cl")).catch(function(e){ console.warn("Supabase CL save failed:", e); });
+
 }
 
 function syncPersonal(silent){
@@ -383,6 +393,7 @@ function applyCLCustomize(){
     ".cl-body-paragraphs .cl-para{margin-bottom:"+paraspacing+"px!important}"+
     ".cl-sig-line{border-top-color:"+accent+"!important}";
   Store.set("jt_clStyle",{font:font,fontSize:fontSize,lineHeight:lineHeight,nameSize:nameSize,margin:margin,vmargin:vmargin,paraspacing:paraspacing,accent:accent,nameColor:nameColor,bodyColor:bodyColor,recipientColor:recipColor,headerAlign:clSettings.headerAlign,sigLine:clSettings.sigLine,declPosition:clSettings.declPosition});
+  if(window.dbSaveStyle) dbSaveStyle("cover_letters", Store.get("jt_clStyle")).catch(function(e){ console.warn("Supabase CL style save failed:", e); });
   renderCL();
 }
 

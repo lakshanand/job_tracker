@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Job Hunt Kit — Land Your Next Job</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f5f2;
+  --surface:#fff;
+  --surface2:#f0ede8;
+  --border:#e8e3dc;
+  --border2:#d4cdc4;
+  --ink:#1c1917;
+  --ink2:#6b6560;
+  --ink3:#a09890;
+  --accent:#e8294a;
+  --accent2:#f5620f;
+  --accent3:#f0a500;
+  --accent-light:#fff0f2;
+  --radius:14px;
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  overflow-x:hidden;
+}
+
+/* Subtle grain texture */
+body::after{
+  content:"";position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;
+}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:0 40px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:background .3s, border-color .3s, box-shadow .3s;
+}
+nav.scrolled{
+  background:rgba(247,245,242,.92);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 1px 20px rgba(0,0,0,.04);
+}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-icon{
+  width:36px;height:36px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:#fff;
+}
+.nav-logo-text{font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;color:var(--ink)}
+.nav-links{display:flex;gap:32px}
+.nav-links a{font-size:14px;color:var(--ink2);text-decoration:none;transition:.15s;font-weight:400}
+.nav-links a:hover{color:var(--ink)}
+.nav-cta{
+  background:var(--ink);color:#fff;
+  border:none;border-radius:8px;
+  padding:10px 22px;
+  font:600 13px 'DM Sans',sans-serif;
+  cursor:pointer;transition:.2s;text-decoration:none;
+  letter-spacing:.02em;
+}
+.nav-cta:hover{background:#333;transform:translateY(-1px)}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  padding:100px 40px 80px;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+
+/* Light blobs */
+.blob{
+  position:absolute;border-radius:50%;
+  filter:blur(100px);pointer-events:none;
+}
+.blob-1{width:500px;height:500px;background:#ffd0d8;opacity:.55;top:-150px;left:-100px;animation:drift 14s ease-in-out infinite alternate}
+.blob-2{width:450px;height:450px;background:#ffe0cc;opacity:.5;bottom:-100px;right:-100px;animation:drift 11s ease-in-out infinite alternate-reverse}
+.blob-3{width:350px;height:350px;background:#fff0cc;opacity:.4;top:40%;left:55%;transform:translate(-50%,-50%);animation:drift 16s ease-in-out infinite alternate}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(30px,20px) scale(1.08)}}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:100px;padding:7px 18px;
+  font-size:12px;font-weight:500;color:var(--ink2);
+  margin-bottom:32px;
+  box-shadow:0 2px 12px rgba(0,0,0,.06);
+  animation:fadeUp .5s ease both;
+}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+h1.hero-headline{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:clamp(52px,7.5vw,92px);
+  font-weight:800;
+  line-height:.95;
+  letter-spacing:-.035em;
+  margin-bottom:28px;
+  color:var(--ink);
+  animation:fadeUp .5s .1s ease both;
+}
+.grad{
+  background:linear-gradient(90deg,var(--accent) 0%,var(--accent2) 50%,var(--accent3) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-sub{
+  font-size:clamp(16px,1.8vw,19px);
+  color:var(--ink2);line-height:1.65;
+  max-width:540px;margin:0 auto 48px;
+  font-weight:300;
+  animation:fadeUp .5s .2s ease both;
+}
+.hero-actions{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;
+  animation:fadeUp .5s .3s ease both;
+}
+.btn-hero{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:12px;
+  padding:15px 36px;
+  font:700 16px 'DM Sans',sans-serif;
+  cursor:pointer;transition:.2s;text-decoration:none;
+  display:inline-flex;align-items:center;gap:8px;
+  box-shadow:0 4px 24px rgba(232,41,74,.2);
+  letter-spacing:.01em;
+}
+.btn-hero:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(232,41,74,.28)}
+.btn-hero svg{transition:.2s}
+.btn-hero:hover svg{transform:translateX(3px)}
+
+.btn-ghost{
+  background:var(--surface);color:var(--ink2);
+  border:1px solid var(--border);border-radius:12px;
+  padding:15px 28px;
+  font:500 16px 'DM Sans',sans-serif;
+  cursor:pointer;transition:.2s;text-decoration:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+.btn-ghost:hover{border-color:var(--border2);color:var(--ink)}
+
+.proof-row{
+  display:flex;align-items:center;gap:28px;flex-wrap:wrap;justify-content:center;
+  margin-top:48px;
+  animation:fadeUp .5s .4s ease both;
+}
+.proof-pill{
+  display:flex;align-items:center;gap:6px;
+  font-size:13px;color:var(--ink3);font-weight:400;
+}
+.proof-pill svg{color:var(--accent);flex-shrink:0}
+.proof-sep{width:1px;height:16px;background:var(--border)}
+
+/* ── MARQUEE ── */
+.marquee-wrap{
+  padding:20px 0;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  overflow:hidden;background:var(--surface);
+}
+.marquee-track{
+  display:flex;gap:40px;
+  animation:marquee 22s linear infinite;
+  width:max-content;
+}
+.marquee-track:hover{animation-play-state:paused}
+.marquee-item{
+  font-family:'Bricolage Grotesque',sans-serif;font-size:12px;font-weight:700;
+  color:var(--ink3);letter-spacing:.18em;text-transform:uppercase;
+  white-space:nowrap;display:flex;align-items:center;gap:12px;
+}
+.m-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);flex-shrink:0}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ── FEATURES ── */
+.section{padding:110px 40px}
+.sect-label{
+  font-size:11px;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--accent);
+  display:flex;align-items:center;gap:8px;margin-bottom:14px;
+}
+.sect-label::before{content:"";width:20px;height:2px;background:var(--accent);border-radius:2px}
+.sect-title{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:clamp(34px,4.5vw,52px);
+  font-weight:800;line-height:1.06;
+  letter-spacing:-.025em;margin-bottom:16px;
+  color:var(--ink);
+}
+.sect-sub{font-size:16px;color:var(--ink2);line-height:1.65;max-width:480px;font-weight:300}
+
+.feat-grid{
+  max-width:1100px;margin:64px auto 0;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+.feat-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:32px 28px;
+  transition:.25s;
+  position:relative;overflow:hidden;
+}
+.feat-card::after{
+  content:"";position:absolute;
+  bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transform:scaleX(0);transform-origin:left;
+  transition:.3s;
+}
+.feat-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.06);border-color:var(--border2)}
+.feat-card:hover::after{transform:scaleX(1)}
+.feat-icon{
+  width:44px;height:44px;border-radius:10px;
+  background:var(--accent-light);border:1px solid #ffd0d8;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin-bottom:20px;
+}
+.feat-title{
+  font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;
+  margin-bottom:10px;color:var(--ink);line-height:1.2;
+}
+.feat-desc{font-size:13px;color:var(--ink2);line-height:1.65;font-weight:300}
+
+/* ── HOW IT WORKS ── */
+.how-section{
+  padding:110px 40px;
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+.how-inner{max-width:1000px;margin:0 auto}
+.how-header{margin-bottom:72px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:40px;position:relative}
+.steps::before{
+  content:"";position:absolute;
+  top:28px;left:calc(12.5% + 14px);right:calc(12.5% + 14px);
+  height:1px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3),transparent);
+}
+.step{position:relative}
+.step-num{
+  width:56px;height:56px;border-radius:50%;
+  background:var(--bg);border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:800;
+  color:var(--ink3);margin-bottom:24px;
+  position:relative;z-index:1;transition:.3s;
+}
+.step:hover .step-num{
+  border-color:var(--accent);color:var(--accent);
+  background:var(--accent-light);
+  box-shadow:0 0 0 6px rgba(232,41,74,.06);
+}
+.step-title{font-family:'Bricolage Grotesque',sans-serif;font-size:15px;font-weight:700;margin-bottom:8px;color:var(--ink)}
+.step-desc{font-size:13px;color:var(--ink2);line-height:1.65;font-weight:300}
+
+/* ── STATS ── */
+.stats-section{padding:80px 40px}
+.stats-inner{
+  max-width:900px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:44px 36px;text-align:center;
+  transition:.2s;
+}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.05)}
+.stat-num{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:clamp(44px,5.5vw,64px);
+  font-weight:800;line-height:1;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;margin-bottom:10px;
+}
+.stat-label{font-size:13px;color:var(--ink2);line-height:1.5;font-weight:400}
+
+/* ── CTA ── */
+.cta-section{
+  padding:120px 40px;text-align:center;
+  background:var(--ink);
+  position:relative;overflow:hidden;
+}
+.cta-section::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(232,41,74,.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+.cta-section::after{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 50% 100%,rgba(245,98,15,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.cta-inner{position:relative;z-index:1}
+.cta-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:100px;padding:6px 16px;
+  font-size:12px;color:rgba(255,255,255,.5);
+  margin-bottom:28px;letter-spacing:.05em;text-transform:uppercase;
+}
+.cta-title{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:clamp(40px,6vw,68px);
+  font-weight:800;line-height:1;
+  letter-spacing:-.03em;margin-bottom:20px;
+  color:#f5f0e8;
+}
+.cta-sub{font-size:17px;color:rgba(245,240,232,.5);margin-bottom:48px;font-weight:300}
+.cta-note{margin-top:20px;font-size:12px;color:rgba(255,255,255,.3)}
+.cta-note span{color:rgba(232,41,74,.8)}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--ink);
+  border-top:1px solid #2a2724;
+  padding:36px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:16px;
+}
+.footer-left{display:flex;align-items:center;gap:16px}
+.footer-logo{font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:700;color:rgba(245,240,232,.8)}
+.footer-copy{font-size:12px;color:rgba(245,240,232,.3)}
+.footer-links{display:flex;gap:24px}
+.footer-links a{font-size:12px;color:rgba(245,240,232,.3);text-decoration:none;transition:.15s}
+.footer-links a:hover{color:rgba(245,240,232,.7)}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .65s ease,transform .65s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.d1{transition-delay:.08s}.d2{transition-delay:.16s}.d3{transition-delay:.24s}.d4{transition-delay:.32s}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  nav{padding:0 20px}
+  .nav-links{display:none}
+  .hero{padding:90px 20px 60px}
+  .section,.how-section,.stats-section,.cta-section{padding-left:20px;padding-right:20px}
+  .feat-grid{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr 1fr;gap:32px}
+  .steps::before{display:none}
+  .stats-inner{grid-template-columns:1fr}
+  footer{padding:28px 20px;flex-direction:column;align-items:flex-start}
+}
+@media(max-width:500px){
+  .steps{grid-template-columns:1fr}
+  .proof-row{gap:16px}
+  .proof-sep{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon">J</div>
+    <div class="nav-logo-text">Job Hunt Kit</div>
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How it works</a>
+    <a href="https://github.com/lakshanand/job_tracker" target="_blank">GitHub</a>
+  </div>
+  <a href="login.html" class="nav-cta">Get started →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    Free · Open source · No install needed
+  </div>
+
+  <h1 class="hero-headline">
+    Your job search,<br/>
+    <span class="grad">finally organized.</span>
+  </h1>
+
+  <p class="hero-sub">
+    Track applications, build ATS-ready resumes, and write tailored cover letters — all in one place, powered by AI. Free forever.
+  </p>
+
+  <div class="hero-actions">
+    <a href="login.html" class="btn-hero">
+      Start for free
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+    <a href="#features" class="btn-ghost">See features</a>
+  </div>
+
+  <div class="proof-row">
+    <div class="proof-pill">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      No credit card
+    </div>
+    <div class="proof-sep"></div>
+    <div class="proof-pill">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      ATS-readable PDFs
+    </div>
+    <div class="proof-sep"></div>
+    <div class="proof-pill">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      AI-powered
+    </div>
+    <div class="proof-sep"></div>
+    <div class="proof-pill">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Your data, your control
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <div class="marquee-item"><span class="m-dot"></span>Job Tracker</div>
+    <div class="marquee-item"><span class="m-dot"></span>Resume Builder</div>
+    <div class="marquee-item"><span class="m-dot"></span>Cover Letter Generator</div>
+    <div class="marquee-item"><span class="m-dot"></span>AI Tailor</div>
+    <div class="marquee-item"><span class="m-dot"></span>ATS-Ready PDFs</div>
+    <div class="marquee-item"><span class="m-dot"></span>Gemini Powered</div>
+    <div class="marquee-item"><span class="m-dot"></span>Free Forever</div>
+    <div class="marquee-item"><span class="m-dot"></span>Open Source</div>
+    <div class="marquee-item"><span class="m-dot"></span>Job Tracker</div>
+    <div class="marquee-item"><span class="m-dot"></span>Resume Builder</div>
+    <div class="marquee-item"><span class="m-dot"></span>Cover Letter Generator</div>
+    <div class="marquee-item"><span class="m-dot"></span>AI Tailor</div>
+    <div class="marquee-item"><span class="m-dot"></span>ATS-Ready PDFs</div>
+    <div class="marquee-item"><span class="m-dot"></span>Gemini Powered</div>
+    <div class="marquee-item"><span class="m-dot"></span>Free Forever</div>
+    <div class="marquee-item"><span class="m-dot"></span>Open Source</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div style="max-width:1100px;margin:0 auto">
+    <div class="reveal">
+      <div class="sect-label">What's inside</div>
+      <h2 class="sect-title">Everything you need.<br/>Nothing you don't.</h2>
+      <p class="sect-sub">Built by someone who's been through the job hunt grind. Every feature exists for a reason.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card reveal">
+        <div class="feat-icon">📋</div>
+        <div class="feat-title">Kanban Job Tracker</div>
+        <p class="feat-desc">Move applications through Applied → Phone Screen → Interview → Offer → Rejected. See your entire pipeline at a glance and never lose track.</p>
+      </div>
+      <div class="feat-card reveal d1">
+        <div class="feat-icon">📄</div>
+        <div class="feat-title">Resume Builder</div>
+        <p class="feat-desc">Build a clean resume with live preview. Customize fonts, colors, spacing, and templates. Download a fully ATS-readable PDF every time.</p>
+      </div>
+      <div class="feat-card reveal d2">
+        <div class="feat-icon">💌</div>
+        <div class="feat-title">Cover Letter Generator</div>
+        <p class="feat-desc">Structured editor with live preview. Generate a tailored letter for any saved job with one click using Gemini AI.</p>
+      </div>
+      <div class="feat-card reveal d1">
+        <div class="feat-icon">🔗</div>
+        <div class="feat-title">AI Job Extraction</div>
+        <p class="feat-desc">Paste any job posting URL — AI automatically extracts the company, role, and requirements. No more manual copy-pasting.</p>
+      </div>
+      <div class="feat-card reveal d2">
+        <div class="feat-icon">🎯</div>
+        <div class="feat-title">Resume Match Score</div>
+        <p class="feat-desc">Get a 0–100 score showing how well your resume matches each job. Know your strongest applications before you hit send.</p>
+      </div>
+      <div class="feat-card reveal d3">
+        <div class="feat-icon">✍️</div>
+        <div class="feat-title">AI Bullet Tailor</div>
+        <p class="feat-desc">Paste a job description and AI rewrites your experience bullets to highlight the skills and keywords the employer is looking for.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how-it-works">
+  <div class="how-inner">
+    <div class="how-header reveal">
+      <div class="sect-label">The process</div>
+      <h2 class="sect-title">Up and running<br/>in minutes.</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">1</div>
+        <div class="step-title">Create your account</div>
+        <p class="step-desc">Sign up free with email or Google. Your data syncs securely across every device.</p>
+      </div>
+      <div class="step reveal d1">
+        <div class="step-num">2</div>
+        <div class="step-title">Build your resume</div>
+        <p class="step-desc">Fill in your experience, pick a layout, and download an ATS-ready PDF in under 15 minutes.</p>
+      </div>
+      <div class="step reveal d2">
+        <div class="step-num">3</div>
+        <div class="step-title">Add your API key</div>
+        <p class="step-desc">Get a free Gemini key from Google AI Studio — takes 2 minutes, no credit card needed.</p>
+      </div>
+      <div class="step reveal d3">
+        <div class="step-num">4</div>
+        <div class="step-title">Start applying</div>
+        <p class="step-desc">Paste job URLs, score your fit, generate cover letters, and track every application.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-section">
+  <div class="stats-inner reveal" style="grid-template-columns:repeat(2,1fr);max-width:600px">
+    <div class="stat-card">
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Free to use<br/>No hidden fees or paywalls</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">ATS</div>
+      <div class="stat-label">Ready PDFs<br/>Parsed by Workday, Greenhouse & more</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-inner reveal">
+    <div class="cta-badge">
+      <span class="badge-dot" style="background:rgba(255,255,255,.4)"></span>
+      Free forever
+    </div>
+    <h2 class="cta-title">Ready to land<br/><span class="grad">your next role?</span></h2>
+    <p class="cta-sub">Join job seekers applying smarter, not harder.</p>
+    <a href="login.html" class="btn-hero" style="font-size:17px;padding:17px 48px">
+      Get started — it's free
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+    <p class="cta-note">No credit card &nbsp;·&nbsp; Bring your own <span>free</span> Gemini key &nbsp;·&nbsp; Open source</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">
+    <div class="footer-logo">Job Hunt Kit</div>
+    <div class="footer-copy">Built for job seekers, by a job seeker.</div>
+  </div>
+  <div class="footer-links">
+    <a href="login.html">Sign In</a>
+    <a href="#features">Features</a>
+    <a href="https://github.com/lakshanand/job_tracker" target="_blank">GitHub ↗</a>
+    <a href="https://aistudio.google.com" target="_blank">Get API Key ↗</a>
+  </div>
+</footer>
+
+<script>
+window.addEventListener("scroll", function() {
+  document.getElementById("nav").classList.toggle("scrolled", window.scrollY > 40);
+});
+var obs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) { if(e.isIntersecting) e.target.classList.add("visible"); });
+}, { threshold: 0.08 });
+document.querySelectorAll(".reveal").forEach(function(el) { obs.observe(el); });
+</script>
+</body>
+</html>

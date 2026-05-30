@@ -486,25 +486,25 @@ async function dbLoadStyle(table) {
 async function dbSaveJobs(jobs) {
   var sb = await getSupabase();
   var user = await getUser();
-  Store.set("jt_jobs", jobs); // always save locally
+  Store.set("jt_jobs", jobs); // always keep local copy
   if(!sb || !user) return;
-  await sb.from("jobs").delete().eq("user_id", user.id);
-  var rows = Object.entries(jobs).map(function(entry) {
-    return { user_id: user.id, job_id: entry[0], data: entry[1] };
-  });
-  if(rows.length > 0) await sb.from("jobs").insert(rows);
+  // Store entire jobs array as single JSON blob for simplicity
+  await sb.from("jobs").upsert(
+    { user_id: user.id, job_id: "all", data: jobs, updated_at: new Date().toISOString() },
+    { onConflict: "user_id,job_id" }
+  );
 }
 
 async function dbLoadJobs() {
   var sb = await getSupabase();
   var user = await getUser();
-  if(!sb || !user) return Store.get("jt_jobs") || {};
-  var { data } = await sb.from("jobs").select("job_id, data").eq("user_id", user.id);
-  if(!data || data.length === 0) return Store.get("jt_jobs") || {};
-  var jobs = {};
-  data.forEach(function(row) { jobs[row.job_id] = row.data; });
-  Store.set("jt_jobs", jobs);
-  return jobs;
+  if(!sb || !user) return Store.get("jt_jobs") || [];
+  var { data } = await sb.from("jobs").select("data").eq("user_id", user.id).eq("job_id", "all").single();
+  if(data && data.data) {
+    Store.set("jt_jobs", data.data);
+    return data.data;
+  }
+  return Store.get("jt_jobs") || [];
 }
 
 function renderSidebar(activePage) {
