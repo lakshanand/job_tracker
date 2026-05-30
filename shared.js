@@ -501,7 +501,6 @@ async function _dbUpsert(table, fields) {
     return false;
   }
   
-  console.log("_dbUpsert success:", table);
   return true;
 }
 
