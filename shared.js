@@ -511,7 +511,7 @@ function renderSidebar(activePage) {
   var pages = [
     { id:"resume",       href:"resume.html",       icon:"📄", label:"Resume" },
     { id:"cover-letter", href:"cover-letter.html",  icon:"💌", label:"Cover Letter" },
-    { id:"tracker",      href:"index.html",         icon:"💼", label:"Job Tracker" },
+    { id:"tracker",      href:"app.html",         icon:"💼", label:"Job Tracker" },
   ];
   var nav = pages.map(function(p) {
     return '<a href="'+p.href+'"><button class="sidebar-item'+(activePage===p.id?' active':'')+'" onclick="">'+

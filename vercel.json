@@ -1,24 +1,10 @@
 {
   "rewrites": [
-    {
-      "source": "/api/generate-pdf",
-      "destination": "/api/generate-pdf.py"
-    },
-    {
-      "source": "/api/config",
-      "destination": "/api/config.py"
-    },
-    {
-      "source": "/resume",
-      "destination": "/resume.html"
-    },
-    {
-      "source": "/cover-letter",
-      "destination": "/cover-letter.html"
-    },
-    {
-      "source": "/login",
-      "destination": "/login.html"
-    }
+    { "source": "/api/generate-pdf", "destination": "/api/generate-pdf.py" },
+    { "source": "/api/config",        "destination": "/api/config.py" },
+    { "source": "/app",               "destination": "/app.html" },
+    { "source": "/resume",            "destination": "/resume.html" },
+    { "source": "/cover-letter",      "destination": "/cover-letter.html" },
+    { "source": "/login",             "destination": "/login.html" }
   ]
 }
