@@ -446,13 +446,21 @@ async function getSupabase() {
 
 async function requireAuth() {
   var sb = await getSupabase();
-  if(!sb) return null; // not configured — allow use without login
-  var { data } = await sb.auth.getSession();
-  if(!data.session) {
-    window.location.href = "login.html";
-    return null;
+  if(!sb) return null; // Supabase not configured — allow use without login
+
+  // Try up to 8 times (4 seconds) waiting for session to restore from storage
+  for(var i = 0; i < 8; i++) {
+    var { data, error } = await sb.auth.getSession();
+    if(data && data.session) return data.session.user;
+    if(i < 7) await new Promise(function(r){ setTimeout(r, 500); });
   }
-  return data.session.user;
+
+  // No session found after waiting — redirect to login
+  // But only if we're not already on login page
+  if(!window.location.href.includes("login.html")) {
+    window.location.href = "login.html";
+  }
+  return null;
 }
 
 async function getUser() {

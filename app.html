@@ -334,24 +334,14 @@ window.scoreJob=scoreJob; window.generateJobCL=generateJobCL;
 // ── Init: wait for Supabase auth then load data ──────────────────────────────
 (async function init() {
   renderSidebar("tracker");
-  if(window.getSupabase) {
-    try {
-      var sb = await getSupabase();
-      if(sb) {
-        for(var i=0; i<6; i++) {
-          var { data } = await sb.auth.getSession();
-          if(data.session) break;
-          await new Promise(function(r){ setTimeout(r,500); });
-        }
-        // Load jobs from Supabase
-        var remoteJobs = await window.dbLoadJobs();
-        if(remoteJobs && remoteJobs.length > 0) {
-          jobs = remoteJobs;
-          Store.set("jt_jobs", jobs);
-        }
-      }
-    } catch(e) { console.warn("Supabase init failed, using local data:", e); }
-  }
+  // requireAuth already waited for session — just load data now
+  try {
+    var remoteJobs = await window.dbLoadJobs();
+    if(remoteJobs && remoteJobs.length > 0) {
+      jobs = remoteJobs;
+      Store.set("jt_jobs", jobs);
+    }
+  } catch(e) { console.warn("Supabase jobs load failed, using local:", e); }
   renderKanban();
 })();
 </script>
