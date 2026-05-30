@@ -446,11 +446,25 @@ async function requireAuth() {
   var sb = await getSupabase();
   if(!sb) return null;
 
-  // getSession() reads from local storage synchronously — no need to poll
   var { data } = await sb.auth.getSession();
-  if(data && data.session) return data.session.user;
+  if(data && data.session) {
+    var user = data.session.user;
 
-  // No session — redirect once, don't loop
+    // Detect user switch — if localStorage has a different user's data, clear it
+    var cachedUserId = localStorage.getItem("jt_user_id");
+    if(cachedUserId && cachedUserId !== user.id) {
+      // Different user — wipe all cached data
+      console.log("User switched — clearing local cache");
+      var keysToRemove = ["jt_resume","jt_resumeStyle","jt_cl","jt_clStyle",
+                          "jt_jobs","jt_jobCounter"];
+      keysToRemove.forEach(function(k){ localStorage.removeItem(k); });
+    }
+    // Store current user id
+    localStorage.setItem("jt_user_id", user.id);
+    return user;
+  }
+
+  // No session — redirect once
   if(!window.__jt_redirecting) {
     window.__jt_redirecting = true;
     window.location.href = "login.html";
@@ -468,6 +482,10 @@ async function getUser() {
 async function signOut() {
   var sb = await getSupabase();
   if(sb) await sb.auth.signOut();
+  // Clear all cached data on sign out
+  var keysToRemove = ["jt_resume","jt_resumeStyle","jt_cl","jt_clStyle",
+                      "jt_jobs","jt_jobCounter","jt_user_id"];
+  keysToRemove.forEach(function(k){ localStorage.removeItem(k); });
   window.location.href = "login.html";
 }
 
