@@ -477,24 +477,23 @@ async function _dbUpsert(table, fields) {
   var user = await getUser();
   if(!sb) { console.warn("_dbUpsert: Supabase not initialized"); return false; }
   if(!user) { console.warn("_dbUpsert: No user session"); return false; }
-  
-  var payload = Object.assign({ updated_at: new Date().toISOString() }, fields);
-  
-  // Check if row exists using limit(1) — more reliable than maybeSingle()
+
+  // Check if row exists
   var checkResult = await sb.from(table).select("id").eq("user_id", user.id).limit(1);
   if(checkResult.error) {
-    console.error("_dbUpsert select error on", table, ":", checkResult.error.message);
-    showToast("DB error: " + checkResult.error.message, true);
+    console.error("_dbUpsert select error on", table, ":", checkResult.error);
     return false;
   }
-  
+
   var result;
   if(checkResult.data && checkResult.data.length > 0) {
-    result = await sb.from(table).update(payload).eq("user_id", user.id);
+    // Row exists — update only the fields we have
+    result = await sb.from(table).update(fields).eq("user_id", user.id);
   } else {
-    result = await sb.from(table).insert(Object.assign({ user_id: user.id }, payload));
+    // No row — insert with user_id + whatever fields we have
+    result = await sb.from(table).insert(Object.assign({ user_id: user.id }, fields));
   }
-  
+
   if(result.error) {
     console.error("_dbUpsert write error on", table, ":", result.error);
     showToast("Save failed: " + result.error.message, true);
