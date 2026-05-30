@@ -494,14 +494,33 @@ async function dbSaveStyle(table, styleObj) {
   await _dbUpsert(table, { style: styleObj });
 }
 
+
+
+async function dbLoad(table) {
+  var sb = await getSupabase();
+  var user = await getUser();
+  if(!sb || !user) return Store.get("jt_" + table);
+  try {
+    var result = await sb.from(table).select("data").eq("user_id", user.id).limit(1);
+    if(result.data && result.data.length > 0 && result.data[0].data) {
+      Store.set("jt_" + table, result.data[0].data);
+      return result.data[0].data;
+    }
+  } catch(e) { console.warn("dbLoad error:", e); }
+  return Store.get("jt_" + table);
+}
+
 async function dbLoadStyle(table) {
   var sb = await getSupabase();
   var user = await getUser();
   if(!sb || !user) return Store.get("jt_" + table + "Style");
-  var styleResult = await sb.from(table).select("style").eq("user_id", user.id).limit(1);
-  if(styleResult.data && styleResult.data.length > 0 && styleResult.data[0].style) {
-    return styleResult.data[0].style;
-  }
+  try {
+    var result = await sb.from(table).select("style").eq("user_id", user.id).limit(1);
+    if(result.data && result.data.length > 0 && result.data[0].style) {
+      Store.set("jt_" + table + "Style", result.data[0].style);
+      return result.data[0].style;
+    }
+  } catch(e) { console.warn("dbLoadStyle error:", e); }
   return Store.get("jt_" + table + "Style");
 }
 
