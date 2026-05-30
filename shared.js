@@ -397,9 +397,18 @@ var SHARED_CSS = `
 var _sb = null;
 
 async function getSupabase() {
-  if(_sb) return _sb;
+  // Use window-level singleton to prevent multiple GoTrueClient instances
+  if(window.__jt_sb) { _sb = window.__jt_sb; return _sb; }
+  if(_sb) { window.__jt_sb = _sb; return _sb; }
   if(!window.supabase) {
     await new Promise(function(resolve, reject) {
+      // Check if script already loading/loaded
+      if(document.querySelector('script[src*="supabase"]')) {
+        var check = setInterval(function(){
+          if(window.supabase){ clearInterval(check); resolve(); }
+        }, 50);
+        return;
+      }
       var s = document.createElement("script");
       s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
       s.onload = resolve; s.onerror = reject;
@@ -411,6 +420,7 @@ async function getSupabase() {
     var cfg = await res.json();
     if(cfg.supabaseUrl && cfg.supabaseAnon) {
       _sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnon);
+      window.__jt_sb = _sb;
     }
   } catch(e) { console.warn("Supabase config error:", e); }
   return _sb;
@@ -444,21 +454,34 @@ async function signOut() {
 async function _dbUpsert(table, fields) {
   var sb = await getSupabase();
   var user = await getUser();
-  if(!sb || !user) return false;
-  try {
-    var { data: existing } = await sb.from(table)
-      .select("id").eq("user_id", user.id).maybeSingle();
-    var payload = Object.assign({ updated_at: new Date().toISOString() }, fields);
-    if(existing) {
-      await sb.from(table).update(payload).eq("user_id", user.id);
-    } else {
-      await sb.from(table).insert(Object.assign({ user_id: user.id }, payload));
-    }
-    return true;
-  } catch(e) {
-    console.warn("Supabase upsert failed for", table, e.message || e);
+  if(!sb) { console.warn("_dbUpsert: Supabase not initialized"); return false; }
+  if(!user) { console.warn("_dbUpsert: No user session"); return false; }
+  
+  var payload = Object.assign({ updated_at: new Date().toISOString() }, fields);
+  
+  // Check if row exists using limit(1) — more reliable than maybeSingle()
+  var checkResult = await sb.from(table).select("id").eq("user_id", user.id).limit(1);
+  if(checkResult.error) {
+    console.error("_dbUpsert select error on", table, ":", checkResult.error.message);
+    showToast("DB error: " + checkResult.error.message, true);
     return false;
   }
+  
+  var result;
+  if(checkResult.data && checkResult.data.length > 0) {
+    result = await sb.from(table).update(payload).eq("user_id", user.id);
+  } else {
+    result = await sb.from(table).insert(Object.assign({ user_id: user.id }, payload));
+  }
+  
+  if(result.error) {
+    console.error("_dbUpsert write error on", table, ":", result.error.message);
+    showToast("Save failed: " + result.error.message, true);
+    return false;
+  }
+  
+  console.log("_dbUpsert success:", table);
+  return true;
 }
 
 async function dbSave(table, dataObj) {
@@ -475,8 +498,10 @@ async function dbLoadStyle(table) {
   var sb = await getSupabase();
   var user = await getUser();
   if(!sb || !user) return Store.get("jt_" + table + "Style");
-  var { data } = await sb.from(table).select("style").eq("user_id", user.id).single();
-  if(data && data.style) return data.style;
+  var styleResult = await sb.from(table).select("style").eq("user_id", user.id).limit(1);
+  if(styleResult.data && styleResult.data.length > 0 && styleResult.data[0].style) {
+    return styleResult.data[0].style;
+  }
   return Store.get("jt_" + table + "Style");
 }
 
@@ -486,8 +511,9 @@ async function dbSaveJobs(jobs) {
   var user = await getUser();
   if(!sb || !user) return;
   try {
-    var { data: existing } = await sb.from("jobs")
-      .select("id").eq("user_id", user.id).eq("job_id", "all").maybeSingle();
+    var jobsCheck = await sb.from("jobs")
+      .select("id").eq("user_id", user.id).eq("job_id", "all").limit(1);
+    var existing = jobsCheck.data && jobsCheck.data.length > 0 ? jobsCheck.data[0] : null;
     if(existing) {
       await sb.from("jobs").update({
         data: jobs, updated_at: new Date().toISOString()
@@ -505,10 +531,10 @@ async function dbLoadJobs() {
   var sb = await getSupabase();
   var user = await getUser();
   if(!sb || !user) return Store.get("jt_jobs") || [];
-  var { data } = await sb.from("jobs").select("data").eq("user_id", user.id).eq("job_id", "all").single();
-  if(data && data.data) {
-    Store.set("jt_jobs", data.data);
-    return data.data;
+  var jobsLoad = await sb.from("jobs").select("data").eq("user_id", user.id).eq("job_id", "all").limit(1);
+  if(jobsLoad.data && jobsLoad.data.length > 0 && jobsLoad.data[0].data) {
+    Store.set("jt_jobs", jobsLoad.data[0].data);
+    return jobsLoad.data[0].data;
   }
   return Store.get("jt_jobs") || [];
 }

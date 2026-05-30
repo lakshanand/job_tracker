@@ -390,9 +390,9 @@ async function loadSaved() {
   // Try Supabase first, fall back to localStorage
   if(window.dbLoad) {
     try {
-      var remote = await dbLoad("resumes");
+      var remote = await window.dbLoad("resumes");
       if(remote) Store.set("jt_resume", remote);
-      var remoteStyle = await dbLoadStyle("resumes");
+      var remoteStyle = await window.dbLoadStyle("resumes");
       if(remoteStyle) Store.set("jt_resumeStyle", remoteStyle);
     } catch(e) { console.warn("Supabase load failed:", e); }
   }
@@ -433,7 +433,7 @@ function saveResume() {
     expEntries:expEntries,eduEntries:eduEntries,expIdCounter:expIdCounter,eduIdCounter:eduIdCounter
   };
   Store.set("jt_resume", data);
-  if(window.dbSave) dbSave("resumes", Store.get("jt_resume")).catch(function(e){ console.warn("Supabase resume save failed:", e); });
+  if(window.dbSave) window.dbSave("resumes", Store.get("jt_resume")).catch(function(e){ console.warn("Supabase resume save failed:", e); });
 
 }
 

@@ -142,7 +142,7 @@ function saveJobs() {
   Store.set("jt_jobs", jobs);
   Store.set("jt_jobCounter", jobIdCounter);
   // Async save to Supabase
-  if(window.dbSaveJobs) dbSaveJobs(jobs).catch(function(e){ console.warn("Supabase save failed:", e); });
+  if(window.dbSaveJobs) window.dbSaveJobs(jobs).catch(function(e){ console.warn("Supabase save failed:", e); });
 }
 
 function renderKanban() {
@@ -344,7 +344,7 @@ window.scoreJob=scoreJob; window.generateJobCL=generateJobCL;
           await new Promise(function(r){ setTimeout(r,500); });
         }
         // Load jobs from Supabase
-        var remoteJobs = await dbLoadJobs();
+        var remoteJobs = await window.dbLoadJobs();
         if(remoteJobs && remoteJobs.length > 0) {
           jobs = remoteJobs;
           Store.set("jt_jobs", jobs);
